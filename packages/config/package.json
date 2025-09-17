@@ -3,7 +3,13 @@
   "version": "0.1.0",
   "description": "Shared configuration for GroundedCounselling",
   "main": "index.js",
+  "exports": {
+    "./eslint-config": "./eslint-config.js",
+    "./prettier-config": "./prettier-config.js",
+    "./tsconfig.json": "./tsconfig.json"
+  },
   "files": [
+    "index.js",
     "eslint-config.js",
     "prettier-config.js",
     "tsconfig.json"
