@@ -1,3 +1,3 @@
 module.exports = {
-  extends: ['@grounded-counselling/config/eslint-config'],
+  extends: ['../../packages/config/eslint-config.js'],
 };
