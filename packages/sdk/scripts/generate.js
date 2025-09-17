@@ -167,7 +167,7 @@ export default GroundedCounsellingClient;
     // Create a fallback types file if generation fails
     if (!fs.existsSync(OUTPUT_FILE)) {
       console.log('🔄 Creating fallback types file...');
-      const fallbackTypes = \`// Fallback types - regenerate when API is available
+      const fallbackTypes = `// Fallback types - regenerate when API is available
 export interface User {
   id: string;
   email: string;
@@ -210,7 +210,7 @@ export interface AuthResponse {
 
 // Placeholder for full OpenAPI types
 export interface paths {}
-\`;
+`;
       fs.writeFileSync(OUTPUT_FILE, fallbackTypes);
       console.log('✅ Fallback types created!');
     }

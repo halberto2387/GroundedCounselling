@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
@@ -38,8 +37,7 @@
     "strictBindCallApply": true,
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccesss": false
+    "noPropertyAccessFromIndexSignature": true
   },
   "include": [
     "next-env.d.ts",
