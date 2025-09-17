@@ -11,6 +11,3 @@ export { cn } from './lib/utils';
 
 // Export design tokens
 export * from './tokens';
-
-// Export CSS
-export './styles/globals.css';

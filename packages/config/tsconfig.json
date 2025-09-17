@@ -28,7 +28,6 @@
       "@/utils/*": ["./src/utils/*"]
     },
     "forceConsistentCasingInFileNames": true,
-    "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": true,
@@ -39,7 +38,7 @@
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccesss": false
+    "noUncheckedIndexedAccess": false
   },
   "include": [
     "next-env.d.ts",

@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Light theme colors based on design tokens */
+  --background: 46 31 22; /* Surface 500 (Sand) in HSL */
+  --foreground: 30 30 30; /* Charcoal */
+  --card: 254 255 254; /* Surface 50 */
+  --card-foreground: 30 30 30; /* Charcoal */
+  --muted: 247 244 240; /* Surface 300 */
+  --muted-foreground: 107 114 128; /* Slate 500 */
+  --border: 228 228 231; /* Neutral 200 */
+  --input: 228 228 231; /* Neutral 200 */
+  --ring: 46 111 78; /* Primary 500 (Evergreen) */
+}
+
+[data-theme="dark"] {
+  /* Dark theme colors */
+  --background: 24 24 27; /* Neutral 800 */
+  --foreground: 250 250 250; /* Neutral 50 */
+  --card: 39 39 42; /* Neutral 700 */
+  --card-foreground: 250 250 250; /* Neutral 50 */
+  --muted: 63 63 70; /* Neutral 600 */
+  --muted-foreground: 161 161 170; /* Neutral 400 */
+  --border: 63 63 70; /* Neutral 600 */
+  --input: 63 63 70; /* Neutral 600 */
+  --ring: 56 179 130; /* Primary 400 */
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: Inter, system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
