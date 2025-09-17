@@ -119,6 +119,64 @@ pnpm generate:sdk
 └── .github/                    # GitHub workflows and templates
 ```
 
+### Web App Development
+
+The Next.js web application is located in `apps/web` and includes:
+
+**Features:**
+- Next.js 14 with App Router and TypeScript
+- Tailwind CSS with design system integration
+- Theming support with light/dark modes
+- Internationalization (i18next) with English default
+- Video calling integration (Jitsi Meet)
+- Sentry monitoring and error tracking
+- Security headers and CSP configuration
+
+**Available Pages:**
+- `/` - Homepage with company branding
+- `/services` - Service offerings overview
+- `/specialists` - Practitioner directory with profiles
+- `/specialists/[id]` - Individual specialist details
+- `/book` - Appointment booking (placeholder)
+- `/blog` - Mental health resources and articles
+- `/account` - User account management
+- `/admin` - Administrative interface (access controlled)
+- `/cms` - Content management system
+- `/auth/*` - Authentication pages (signin, signup, 2FA)
+
+**Development Commands:**
+```bash
+# Start development server
+cd apps/web
+pnpm dev
+
+# Run tests
+pnpm test
+
+# Run e2e tests (requires dev server)
+pnpm test:e2e
+
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start
+```
+
+### Docker Deployment
+
+The web application can be containerized using the provided Dockerfile:
+
+```bash
+# Build Docker image
+docker build -f infra/docker/web.Dockerfile -t grounded-counselling-web .
+
+# Run container
+docker run -p 3000:3000 grounded-counselling-web
+```
+
+**Note:** When using Docker Compose, the web service will be available at http://localhost:3000
+
 ## 🎨 Design System
 
 The design system uses the following brand colors:

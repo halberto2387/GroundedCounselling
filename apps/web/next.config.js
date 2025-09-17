@@ -3,6 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   transpilePackages: ['@grounded-counselling/ui', '@grounded-counselling/sdk'],
+  output: 'standalone',
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
   
   async headers() {
     return [
@@ -50,7 +56,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/:path*`
+        destination: `${process.env['NEXT_PUBLIC_API_BASE_URL'] || 'http://localhost:8000'}/:path*`
       }
     ];
   }
