@@ -15,12 +15,9 @@ RUN apt-get update && apt-get install -y \
 # Set work directory
 WORKDIR /app
 
-# Install UV for faster Python package installation
-RUN pip install uv
-
 # Copy requirements first for better caching
 COPY services/worker/requirements.txt ./
-RUN uv pip install --system -r requirements.txt
+RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.txt
 
 # Copy application code
 COPY services/worker/ ./

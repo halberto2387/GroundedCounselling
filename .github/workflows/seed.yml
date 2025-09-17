@@ -32,6 +32,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install js-yaml
+        run: npm install js-yaml
+
       - name: Create milestones
         if: ${{ inputs.create_milestones }}
         uses: actions/github-script@v7
