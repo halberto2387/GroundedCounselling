@@ -1,0 +1,169 @@
+:root {
+  /* Brand Colors */
+  --gc-primary-50: #f0f9f4;
+  --gc-primary-100: #dcf2e4;
+  --gc-primary-200: #bce4cd;
+  --gc-primary-300: #8dd0ab;
+  --gc-primary-400: #56b382;
+  --gc-primary-500: #2E6F4E; /* Evergreen */
+  --gc-primary-600: #265a40;
+  --gc-primary-700: #1f4832;
+  --gc-primary-800: #1a3a29;
+  --gc-primary-900: #162f22;
+  
+  /* Surface Colors */
+  --gc-surface-50: #fefffe;
+  --gc-surface-100: #fdfdfc;
+  --gc-surface-200: #faf8f6;
+  --gc-surface-300: #f7f4f0;
+  --gc-surface-400: #f6f2ed;
+  --gc-surface-500: #F5F1EA; /* Sand */
+  --gc-surface-600: #e6e1d6;
+  --gc-surface-700: #d7d0c2;
+  --gc-surface-800: #c8bfae;
+  --gc-surface-900: #b9ae9a;
+  
+  /* Text Colors */
+  --gc-text-50: #f7f7f7;
+  --gc-text-100: #e3e3e3;
+  --gc-text-200: #c8c8c8;
+  --gc-text-300: #a4a4a4;
+  --gc-text-400: #818181;
+  --gc-text-500: #666666;
+  --gc-text-600: #515151;
+  --gc-text-700: #434343;
+  --gc-text-800: #383838;
+  --gc-text-900: #1E1E1E; /* Charcoal */
+  
+  /* Muted Colors */
+  --gc-muted-50: #f8fafc;
+  --gc-muted-100: #f1f5f9;
+  --gc-muted-200: #e2e8f0;
+  --gc-muted-300: #cbd5e1;
+  --gc-muted-400: #94a3b8;
+  --gc-muted-500: #6B7280; /* Slate */
+  --gc-muted-600: #475569;
+  --gc-muted-700: #334155;
+  --gc-muted-800: #1e293b;
+  --gc-muted-900: #0f172a;
+  
+  /* Accent Colors */
+  --gc-accent-50: #eff9ff;
+  --gc-accent-100: #daf2ff;
+  --gc-accent-200: #bee9ff;
+  --gc-accent-300: #92dcff;
+  --gc-accent-400: #5fc6fd;
+  --gc-accent-500: #3BA6FF; /* Sky */
+  --gc-accent-600: #1d85e0;
+  --gc-accent-700: #1669b5;
+  --gc-accent-800: #185796;
+  --gc-accent-900: #1a497c;
+  
+  /* Semantic Colors */
+  --gc-success-50: #f0fdf4;
+  --gc-success-100: #dcfce7;
+  --gc-success-200: #bbf7d0;
+  --gc-success-300: #86efac;
+  --gc-success-400: #4ade80;
+  --gc-success-500: #22c55e;
+  --gc-success-600: #16a34a;
+  --gc-success-700: #15803d;
+  --gc-success-800: #166534;
+  --gc-success-900: #14532d;
+  
+  --gc-warning-50: #fefce8;
+  --gc-warning-100: #fef9c3;
+  --gc-warning-200: #fef08a;
+  --gc-warning-300: #fde047;
+  --gc-warning-400: #facc15;
+  --gc-warning-500: #eab308;
+  --gc-warning-600: #ca8a04;
+  --gc-warning-700: #a16207;
+  --gc-warning-800: #854d0e;
+  --gc-warning-900: #713f12;
+  
+  --gc-danger-50: #fef2f2;
+  --gc-danger-100: #fee2e2;
+  --gc-danger-200: #fecaca;
+  --gc-danger-300: #fca5a5;
+  --gc-danger-400: #f87171;
+  --gc-danger-500: #ef4444;
+  --gc-danger-600: #dc2626;
+  --gc-danger-700: #b91c1c;
+  --gc-danger-800: #991b1b;
+  --gc-danger-900: #7f1d1d;
+  
+  /* Semantic Aliases */
+  --gc-primary: var(--gc-primary-500);
+  --gc-surface: var(--gc-surface-500);
+  --gc-text: var(--gc-text-900);
+  --gc-muted: var(--gc-muted-500);
+  --gc-accent: var(--gc-accent-500);
+  --gc-success: var(--gc-success-500);
+  --gc-warning: var(--gc-warning-500);
+  --gc-danger: var(--gc-danger-500);
+  
+  /* Typography */
+  --gc-font-sans: 'Inter', system-ui, sans-serif;
+  --gc-font-serif: 'Source Serif 4', Georgia, serif;
+  --gc-font-mono: 'JetBrains Mono', Consolas, monospace;
+  
+  /* Spacing */
+  --gc-spacing-xs: 0.25rem;
+  --gc-spacing-sm: 0.5rem;
+  --gc-spacing-md: 1rem;
+  --gc-spacing-lg: 1.5rem;
+  --gc-spacing-xl: 2rem;
+  --gc-spacing-2xl: 3rem;
+  --gc-spacing-3xl: 4rem;
+  
+  /* Border Radius */
+  --gc-radius-sm: 0.125rem;
+  --gc-radius-md: 0.375rem;
+  --gc-radius-lg: 0.5rem;
+  --gc-radius-xl: 0.75rem;
+  --gc-radius-full: 9999px;
+  
+  /* Shadows */
+  --gc-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --gc-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --gc-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --gc-shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Animation */
+  --gc-duration-fast: 200ms;
+  --gc-duration-normal: 300ms;
+  --gc-duration-slow: 500ms;
+  
+  --gc-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --gc-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --gc-ease-in: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gc-surface: var(--gc-text-900);
+    --gc-text: var(--gc-surface-100);
+    --gc-muted: var(--gc-muted-400);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  :root {
+    --gc-text: #000000;
+    --gc-surface: #ffffff;
+    --gc-primary: #2E6F4E;
+    --gc-accent: #1669b5;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gc-duration-fast: 0ms;
+    --gc-duration-normal: 0ms;
+    --gc-duration-slow: 0ms;
+  }
+}
