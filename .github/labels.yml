@@ -1,0 +1,197 @@
+# GroundedCounselling Labels Configuration
+
+# Area Labels - What part of the codebase is affected
+- name: "area/frontend"
+  color: "0075ca"
+  description: "Frontend/UI related issues"
+
+- name: "area/backend"
+  color: "0075ca"
+  description: "Backend/API related issues"
+
+- name: "area/database"
+  color: "0075ca"
+  description: "Database schema or query related issues"
+
+- name: "area/infrastructure"
+  color: "0075ca"
+  description: "Infrastructure, deployment, or DevOps related"
+
+- name: "area/mobile"
+  color: "0075ca"
+  description: "Mobile app related issues"
+
+- name: "area/design"
+  color: "0075ca"
+  description: "Design system or UI/UX related"
+
+- name: "area/documentation"
+  color: "0075ca"
+  description: "Documentation updates or improvements"
+
+- name: "area/testing"
+  color: "0075ca"
+  description: "Testing infrastructure or test cases"
+
+- name: "area/security"
+  color: "b60205"
+  description: "Security related issues"
+
+- name: "area/compliance"
+  color: "b60205"
+  description: "HIPAA or other compliance related"
+
+# Type Labels - What kind of work is this
+- name: "type/bug"
+  color: "d73a4a"
+  description: "Something isn't working correctly"
+
+- name: "type/feature"
+  color: "a2eeef"
+  description: "New feature or enhancement"
+
+- name: "type/documentation"
+  color: "0075ca"
+  description: "Documentation improvements"
+
+- name: "type/refactor"
+  color: "fbca04"
+  description: "Code refactoring without functional changes"
+
+- name: "type/performance"
+  color: "fbca04"
+  description: "Performance improvements"
+
+- name: "type/maintenance"
+  color: "fbca04"
+  description: "Maintenance tasks, dependency updates"
+
+- name: "type/spike"
+  color: "c5def5"
+  description: "Research or investigation task"
+
+- name: "type/epic"
+  color: "3f20ba"
+  description: "Large feature or project spanning multiple issues"
+
+# Priority Labels - How urgent/important is this
+- name: "priority/P0"
+  color: "b60205"
+  description: "Critical - Drop everything and fix"
+
+- name: "priority/P1"
+  color: "d93f0b"
+  description: "High - Should be addressed soon"
+
+- name: "priority/P2"
+  color: "fbca04"
+  description: "Medium - Normal priority"
+
+- name: "priority/P3"
+  color: "c5def5"
+  description: "Low - Nice to have"
+
+# Status Labels - Current state of the issue
+- name: "status/triage"
+  color: "ededed"
+  description: "Needs initial triage and prioritization"
+
+- name: "status/ready"
+  color: "c5def5"
+  description: "Ready for development"
+
+- name: "status/in-progress"
+  color: "fbca04"
+  description: "Currently being worked on"
+
+- name: "status/blocked"
+  color: "d93f0b"
+  description: "Blocked by external dependencies"
+
+- name: "status/review"
+  color: "0e8a16"
+  description: "In code review"
+
+- name: "status/testing"
+  color: "0e8a16"
+  description: "Being tested"
+
+- name: "status/done"
+  color: "0e8a16"
+  description: "Completed and verified"
+
+- name: "status/wontfix"
+  color: "ffffff"
+  description: "Will not be addressed"
+
+- name: "status/duplicate"
+  color: "cfd3d7"
+  description: "Duplicate of another issue"
+
+# Effort Labels - How much work is estimated
+- name: "effort/XS"
+  color: "c5def5"
+  description: "Extra small - 1-2 hours"
+
+- name: "effort/S"
+  color: "bfd4f2"
+  description: "Small - 2-4 hours"
+
+- name: "effort/M"
+  color: "9ecbff"
+  description: "Medium - 1-2 days"
+
+- name: "effort/L"
+  color: "6cb6ff"
+  description: "Large - 3-5 days"
+
+- name: "effort/XL"
+  color: "0969da"
+  description: "Extra large - 1+ weeks"
+
+# Special Labels
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: "breaking change"
+  color: "b60205"
+  description: "Introduces breaking changes"
+
+- name: "dependencies"
+  color: "0366d6"
+  description: "Pull requests that update dependencies"
+
+- name: "accessibility"
+  color: "f9d0c4"
+  description: "Accessibility improvements or issues"
+
+# Client/User Labels
+- name: "client/patient"
+  color: "e99695"
+  description: "Affects patient/client users"
+
+- name: "client/counsellor"
+  color: "e99695"
+  description: "Affects counsellor/therapist users"
+
+- name: "client/admin"
+  color: "e99695"
+  description: "Affects administrator users"
+
+# Release Labels
+- name: "release/v1.0"
+  color: "5319e7"
+  description: "Target for v1.0 release"
+
+- name: "release/v1.1"
+  color: "5319e7"
+  description: "Target for v1.1 release"
+
+- name: "release/backlog"
+  color: "5319e7"
+  description: "Future release consideration"

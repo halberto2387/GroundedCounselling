@@ -1,0 +1,43 @@
+# Code Owners for GroundedCounselling
+
+# Global owners - will be requested for review on all PRs unless a more specific rule applies
+* @halberto2387
+
+# Root configuration files
+/.github/ @halberto2387
+/package.json @halberto2387
+/turbo.json @halberto2387
+/.gitignore @halberto2387
+/README.md @halberto2387
+
+# Frontend/Web
+/apps/web/ @halberto2387
+/packages/ui/ @halberto2387
+
+# Backend/API
+/services/api/ @halberto2387
+/services/worker/ @halberto2387
+
+# Shared packages
+/packages/sdk/ @halberto2387
+/packages/config/ @halberto2387
+
+# Infrastructure
+/infra/ @halberto2387
+/docker-compose.yml @halberto2387
+
+# Database
+/db/ @halberto2387
+
+# Documentation
+/docs/ @halberto2387
+
+# CI/CD
+/.github/workflows/ @halberto2387
+
+# Security sensitive files
+/services/api/app/core/security.py @halberto2387
+/services/api/app/core/rbac.py @halberto2387
+/.env.example @halberto2387
+/services/api/.env.example @halberto2387
+/services/worker/.env.example @halberto2387

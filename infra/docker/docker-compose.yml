@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: grounded_counselling
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gc-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gc-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gc-network
+
+  # FastAPI Backend
+  api:
+    build:
+      context: ../services/api
+      dockerfile: ../../infra/docker/api.Dockerfile
+    container_name: gc-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/grounded_counselling
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - JWT_SECRET=your-jwt-secret-change-in-production
+      - JWT_REFRESH_SECRET=your-refresh-secret-change-in-production
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../services/api:/app
+    networks:
+      - gc-network
+
+  # Background Worker
+  worker:
+    build:
+      context: ../services/worker
+      dockerfile: ../../infra/docker/worker.Dockerfile
+    container_name: gc-worker
+    restart: unless-stopped
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - DEBUG=true
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../services/worker:/app
+    networks:
+      - gc-network
+
+  # Next.js Frontend (commented out until created)
+  # web:
+  #   build:
+  #     context: ../apps/web
+  #     dockerfile: ../../infra/docker/web.Dockerfile
+  #   container_name: gc-web
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+  #     - NODE_ENV=development
+  #   depends_on:
+  #     - api
+  #   volumes:
+  #     - ../apps/web:/app
+  #     - /app/node_modules
+  #     - /app/.next
+  #   networks:
+  #     - gc-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  gc-network:
+    driver: bridge
