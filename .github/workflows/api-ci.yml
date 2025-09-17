@@ -27,7 +27,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres
@@ -100,8 +100,20 @@ jobs:
 
       - name: Set up test environment
         run: |
-          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > services/api/.env.test
+          echo "DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/test_db" > services/api/.env.test
           echo "REDIS_URL=redis://localhost:6379/0" >> services/api/.env.test
+      
+      - name: Run Alembic migrations
+        run: |
+          cd services/api
+          # Check if alembic.ini exists and run migrations
+          if [ -f alembic.ini ]; then
+            alembic upgrade head || echo "No migrations to run or alembic not configured yet"
+          else
+            echo "Alembic not configured yet, skipping migrations"
+          fi
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
 
       - name: Run tests with pytest
         run: |
@@ -115,7 +127,7 @@ jobs:
             echo "No tests found, skipping test execution"
           fi
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/0
 
   docker-build:

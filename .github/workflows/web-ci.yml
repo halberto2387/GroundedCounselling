@@ -42,7 +42,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
 
@@ -118,8 +118,8 @@ jobs:
             echo "Web app not found, skipping build"
           fi
         env:
-          NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
-          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXT_PUBLIC_JITSI_DOMAIN: meet.jit.si
 
   docker-build:
     runs-on: ubuntu-latest
