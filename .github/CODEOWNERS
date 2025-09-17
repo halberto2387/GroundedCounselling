@@ -1,0 +1,38 @@
+# CODEOWNERS file for GroundedCounselling
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global ownership - halberto2387 owns everything by default
+* @halberto2387
+
+# Frontend specific
+/apps/web/ @halberto2387
+/packages/ui/ @halberto2387
+/packages/sdk/ @halberto2387
+
+# Backend specific
+/services/api/ @halberto2387
+/services/worker/ @halberto2387
+
+# Infrastructure and DevOps
+/infra/ @halberto2387
+/.github/ @halberto2387
+/docker-compose.yml @halberto2387
+/Dockerfile* @halberto2387
+
+# Configuration
+/package.json @halberto2387
+/pnpm-workspace.yaml @halberto2387
+/turbo.json @halberto2387
+/.env.example @halberto2387
+
+# Documentation
+/docs/ @halberto2387
+/README.md @halberto2387
+
+# Database
+/db/ @halberto2387
+/services/api/alembic/ @halberto2387
+
+# Security and compliance
+/docs/compliance/ @halberto2387
+/.github/workflows/ @halberto2387

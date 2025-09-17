@@ -1,0 +1,310 @@
+issues:
+  # Repository and Infrastructure (M0)
+  - title: "Set up monorepo structure with apps and services"
+    body: |
+      ## Summary
+      Establish the complete monorepo structure as outlined in the project architecture.
+      
+      ## Acceptance Criteria
+      - [ ] Create `apps/web` Next.js application
+      - [ ] Create `services/api` FastAPI backend
+      - [ ] Create `services/worker` RQ worker service
+      - [ ] Update workspace configuration
+      - [ ] Ensure build/dev scripts work across all packages
+      
+      ## Additional Notes
+      This foundational work enables all other development streams.
+    labels: ["type/feature", "area/infra", "priority/P0", "milestone/M0"]
+    milestone: "M0"
+
+  - title: "Implement database schema and migrations"
+    body: |
+      ## Summary
+      Design and implement the core database schema for users, specialists, bookings, and sessions.
+      
+      ## Acceptance Criteria
+      - [ ] Create Alembic migration system
+      - [ ] Design user and authentication tables
+      - [ ] Design specialist profile tables
+      - [ ] Design booking and session tables
+      - [ ] Add proper indexes and constraints
+      
+      ## Additional Notes
+      Follow healthcare data best practices and prepare for HIPAA compliance.
+    labels: ["type/feature", "area/backend", "priority/P0", "milestone/M0"]
+    milestone: "M0"
+
+  - title: "Set up continuous integration and deployment pipelines"
+    body: |
+      ## Summary
+      Establish CI/CD pipelines for automated testing, building, and deployment.
+      
+      ## Acceptance Criteria
+      - [ ] GitHub Actions for API testing and linting
+      - [ ] GitHub Actions for web app testing and building
+      - [ ] Docker image building and validation
+      - [ ] Automated deployment to staging environment
+      
+      ## Additional Notes
+      Include security scanning and compliance checks in the pipeline.
+    labels: ["type/feature", "area/infra", "priority/P1", "milestone/M0"]
+    milestone: "M0"
+
+  # Backend Core Features (M1-M3)
+  - title: "Implement user authentication and JWT handling"
+    body: |
+      ## Summary
+      Build secure authentication system with JWT tokens, refresh tokens, and role-based access.
+      
+      ## Acceptance Criteria
+      - [ ] JWT token generation and validation
+      - [ ] Refresh token rotation
+      - [ ] Role-based access control (Client, Specialist, Admin)
+      - [ ] Password hashing and security
+      - [ ] Session management
+      
+      ## Additional Notes
+      Ensure compliance with healthcare security standards.
+    labels: ["type/feature", "area/backend", "priority/P0", "milestone/M1"]
+    milestone: "M1"
+
+  - title: "Create user registration and profile management API"
+    body: |
+      ## Summary
+      API endpoints for user registration, profile updates, and account management.
+      
+      ## Acceptance Criteria
+      - [ ] User registration endpoint
+      - [ ] Profile retrieval and update endpoints
+      - [ ] Email verification system
+      - [ ] Password reset functionality
+      - [ ] Account deactivation/deletion
+      
+      ## Additional Notes
+      Include proper validation and error handling.
+    labels: ["type/feature", "area/backend", "priority/P0", "milestone/M2"]
+    milestone: "M2"
+
+  - title: "Implement specialist profile and verification system"
+    body: |
+      ## Summary
+      Allow specialists to create detailed profiles with credentials, specializations, and verification status.
+      
+      ## Acceptance Criteria
+      - [ ] Specialist profile creation/update
+      - [ ] Credential upload and storage
+      - [ ] Specialization management
+      - [ ] Verification workflow
+      - [ ] Public specialist directory
+      
+      ## Additional Notes
+      Include file upload for certificates and credentials.
+    labels: ["type/feature", "area/backend", "priority/P1", "milestone/M2"]
+    milestone: "M2"
+
+  - title: "Build booking and scheduling API"
+    body: |
+      ## Summary
+      Core booking system with availability management, appointment scheduling, and calendar integration.
+      
+      ## Acceptance Criteria
+      - [ ] Availability management for specialists
+      - [ ] Booking creation and management
+      - [ ] Calendar integration (Google, Outlook)
+      - [ ] Booking confirmation and notifications
+      - [ ] Cancellation and rescheduling
+      
+      ## Additional Notes
+      Consider time zones and recurring availability patterns.
+    labels: ["type/feature", "area/backend", "priority/P0", "milestone/M3"]
+    milestone: "M3"
+
+  # Frontend Core Features (M1-M4)
+  - title: "Create landing page and marketing site"
+    body: |
+      ## Summary
+      Professional landing page with service information, pricing, and specialist directory.
+      
+      ## Acceptance Criteria
+      - [ ] Responsive landing page design
+      - [ ] Service information and pricing
+      - [ ] Specialist directory with filtering
+      - [ ] Contact forms and lead generation
+      - [ ] SEO optimization
+      
+      ## Additional Notes
+      Use shadcn/ui components and ensure accessibility.
+    labels: ["type/feature", "area/frontend", "priority/P1", "milestone/M1"]
+    milestone: "M1"
+
+  - title: "Build authentication UI (login/register/password reset)"
+    body: |
+      ## Summary
+      Complete authentication user interface with forms, validation, and error handling.
+      
+      ## Acceptance Criteria
+      - [ ] Login form with validation
+      - [ ] Registration form with role selection
+      - [ ] Password reset flow
+      - [ ] Email verification UI
+      - [ ] Error handling and user feedback
+      
+      ## Additional Notes
+      Ensure WCAG accessibility compliance and mobile responsiveness.
+    labels: ["type/feature", "area/frontend", "priority/P0", "milestone/M1"]
+    milestone: "M1"
+
+  - title: "Implement user dashboard and profile management"
+    body: |
+      ## Summary
+      User dashboard with profile management, appointment history, and account settings.
+      
+      ## Acceptance Criteria
+      - [ ] User dashboard with navigation
+      - [ ] Profile editing forms
+      - [ ] Appointment history view
+      - [ ] Account settings and preferences
+      - [ ] Data export functionality
+      
+      ## Additional Notes
+      Different dashboards for clients and specialists.
+    labels: ["type/feature", "area/frontend", "priority/P0", "milestone/M2"]
+    milestone: "M2"
+
+  - title: "Create booking and scheduling interface"
+    body: |
+      ## Summary
+      User-friendly booking interface with calendar views, specialist selection, and appointment management.
+      
+      ## Acceptance Criteria
+      - [ ] Specialist search and filtering
+      - [ ] Calendar view for availability
+      - [ ] Booking form and confirmation
+      - [ ] Appointment management (reschedule, cancel)
+      - [ ] Notifications and reminders
+      
+      ## Additional Notes
+      Optimize for mobile users and include accessibility features.
+    labels: ["type/feature", "area/frontend", "priority/P0", "milestone/M3"]
+    milestone: "M3"
+
+  - title: "Implement video calling interface"
+    body: |
+      ## Summary
+      Secure video calling interface for therapy sessions with recording and note-taking capabilities.
+      
+      ## Acceptance Criteria
+      - [ ] Video call interface integration
+      - [ ] Session controls (mute, camera, screen share)
+      - [ ] Session recording (with consent)
+      - [ ] Real-time note taking
+      - [ ] Session end and summary
+      
+      ## Additional Notes
+      Ensure HIPAA-compliant video solution (Jitsi Meet or similar).
+    labels: ["type/feature", "area/frontend", "priority/P0", "milestone/M4"]
+    milestone: "M4"
+
+  # Quality and Compliance (M5)
+  - title: "Implement comprehensive audit logging"
+    body: |
+      ## Summary
+      Complete audit trail for all user actions, data access, and system events for compliance.
+      
+      ## Acceptance Criteria
+      - [ ] User action logging
+      - [ ] Data access tracking
+      - [ ] System event logging
+      - [ ] Log retention and archival
+      - [ ] Audit report generation
+      
+      ## Additional Notes
+      Required for HIPAA compliance and security audits.
+    labels: ["type/feature", "area/backend", "priority/P0", "milestone/M5"]
+    milestone: "M5"
+
+  - title: "Add data encryption and security hardening"
+    body: |
+      ## Summary
+      Implement encryption at rest and in transit, plus additional security measures.
+      
+      ## Acceptance Criteria
+      - [ ] Database encryption at rest
+      - [ ] File storage encryption
+      - [ ] TLS/SSL configuration
+      - [ ] API rate limiting
+      - [ ] Security headers and CSP
+      
+      ## Additional Notes
+      Follow OWASP guidelines and healthcare security standards.
+    labels: ["type/feature", "area/security", "priority/P0", "milestone/M5"]
+    milestone: "M5"
+
+  - title: "Conduct HIPAA compliance review and documentation"
+    body: |
+      ## Summary
+      Complete HIPAA compliance assessment and create necessary documentation.
+      
+      ## Acceptance Criteria
+      - [ ] HIPAA compliance checklist
+      - [ ] Privacy policy and terms of service
+      - [ ] Business associate agreements
+      - [ ] Security documentation
+      - [ ] Compliance training materials
+      
+      ## Additional Notes
+      May require legal review and healthcare compliance expert consultation.
+    labels: ["type/feature", "area/compliance", "priority/P0", "milestone/M5"]
+    milestone: "M5"
+
+  # Analytics and Advanced Features (M6-M7)
+  - title: "Build analytics dashboard and reporting system"
+    body: |
+      ## Summary
+      Comprehensive analytics for specialists and administrators with usage metrics and insights.
+      
+      ## Acceptance Criteria
+      - [ ] Specialist performance dashboard
+      - [ ] Platform usage analytics
+      - [ ] Financial reporting
+      - [ ] Client outcome tracking
+      - [ ] Export and data visualization
+      
+      ## Additional Notes
+      Ensure all analytics respect privacy and compliance requirements.
+    labels: ["type/feature", "area/frontend", "priority/P2", "milestone/M6"]
+    milestone: "M6"
+
+  - title: "Implement payment processing and billing"
+    body: |
+      ## Summary
+      Secure payment processing with Stripe integration, billing management, and financial reporting.
+      
+      ## Acceptance Criteria
+      - [ ] Stripe integration for payments
+      - [ ] Subscription management
+      - [ ] Invoice generation
+      - [ ] Payment history tracking
+      - [ ] Refund and dispute handling
+      
+      ## Additional Notes
+      Ensure PCI compliance and secure handling of payment data.
+    labels: ["type/feature", "area/backend", "priority/P1", "milestone/M6"]
+    milestone: "M6"
+
+  - title: "Create mobile-responsive progressive web app"
+    body: |
+      ## Summary
+      Optimize the web application for mobile devices and add PWA capabilities.
+      
+      ## Acceptance Criteria
+      - [ ] Mobile-responsive design optimization
+      - [ ] PWA manifest and service worker
+      - [ ] Offline functionality
+      - [ ] Push notifications
+      - [ ] App store optimization
+      
+      ## Additional Notes
+      Focus on mobile-first design and performance optimization.
+    labels: ["type/feature", "area/frontend", "priority/P2", "milestone/M7"]
+    milestone: "M7"

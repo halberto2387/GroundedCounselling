@@ -1,5 +1,9 @@
 # GroundedCounselling
 
+[![API CI](https://github.com/halberto2387/GroundedCounselling/actions/workflows/api-ci.yml/badge.svg)](https://github.com/halberto2387/GroundedCounselling/actions/workflows/api-ci.yml)
+[![Web CI](https://github.com/halberto2387/GroundedCounselling/actions/workflows/web-ci.yml/badge.svg)](https://github.com/halberto2387/GroundedCounselling/actions/workflows/web-ci.yml)
+[![Label Sync](https://github.com/halberto2387/GroundedCounselling/actions/workflows/label-sync.yml/badge.svg)](https://github.com/halberto2387/GroundedCounselling/actions/workflows/label-sync.yml)
+
 A production-ready counselling practice management system built with modern web technologies.
 
 ## 🏗️ Architecture
@@ -17,39 +21,93 @@ This monorepo contains:
 
 ### Prerequisites
 
-- Node.js 18+ with pnpm
-- Python 3.11+
 - Docker and Docker Compose
-- PostgreSQL (or use Docker)
-- Redis (or use Docker)
+- Node.js 18+ with pnpm (for local development without Docker)
+- Python 3.11+ (for local development without Docker)
 
-### Local Development
+### Docker Development (Recommended)
 
-1. **Clone and install dependencies:**
+The fastest way to get started is using Docker Compose:
 
 ```bash
+# Clone the repository
 git clone https://github.com/halberto2387/GroundedCounselling.git
 cd GroundedCounselling
+
+# Copy environment files
+cp .env.example .env
+cp services/api/.env.example services/api/.env
+cp apps/web/.env.example apps/web/.env
+cp services/worker/.env.example services/worker/.env
+
+# Start all services
+docker-compose -f infra/docker/docker-compose.yml up -d
+
+# Check service status
+docker-compose -f infra/docker/docker-compose.yml ps
+```
+
+**Access the application:**
+- Web App: http://localhost:3000
+- API Server: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
+- Database: localhost:5432 (postgres/postgres)
+- Redis: localhost:6379
+
+**Common Docker commands:**
+```bash
+# View logs
+docker-compose -f infra/docker/docker-compose.yml logs -f
+
+# Stop services
+docker-compose -f infra/docker/docker-compose.yml down
+
+# Rebuild after code changes
+docker-compose -f infra/docker/docker-compose.yml up --build
+```
+
+### Local Development (Manual Setup)
+
+If you prefer to run services manually without Docker:
+
+1. **Install dependencies:**
+
+```bash
+# Install pnpm globally
+npm install -g pnpm
+
+# Install workspace dependencies
 pnpm install
 ```
 
-2. **Set up environment variables:**
+2. **Start infrastructure services:**
+
+```bash
+# Start only database and Redis with Docker
+docker-compose -f infra/docker/docker-compose.yml up -d postgres redis
+```
+
+3. **Set up environment variables:**
 
 ```bash
 cp .env.example .env
-# Edit .env with your local configuration
-```
-
-3. **Start services with Docker:**
-
-```bash
-docker-compose up -d postgres redis
+cp services/api/.env.example services/api/.env
+cp apps/web/.env.example apps/web/.env
+cp services/worker/.env.example services/worker/.env
+# Edit files with your local configuration
 ```
 
 4. **Run database migrations:**
 
 ```bash
 cd services/api
+# Create virtual environment and install dependencies
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install uv
+uv pip install -r requirements.txt
+
+# Run migrations
 alembic upgrade head
 ```
 
@@ -58,21 +116,18 @@ alembic upgrade head
 ```bash
 # Terminal 1: API
 cd services/api
+source venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 
 # Terminal 2: Worker
 cd services/worker
+source venv/bin/activate
 python worker/main.py
 
-# Terminal 3: Web
+# Terminal 3: Web (when available)
 cd apps/web
 pnpm dev
 ```
-
-6. **Access the application:**
-   - Web: http://localhost:3000
-   - API: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
 
 ## 🛠️ Development
 

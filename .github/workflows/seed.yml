@@ -1,0 +1,168 @@
+name: Repository Seeding
+
+on:
+  workflow_dispatch:
+    inputs:
+      create_milestones:
+        description: 'Create milestones M0-M7'
+        required: true
+        default: true
+        type: boolean
+      create_project:
+        description: 'Create GitHub Project (requires admin permissions)'
+        required: true
+        default: false
+        type: boolean
+      create_issues:
+        description: 'Create initial backlog issues'
+        required: true
+        default: true
+        type: boolean
+
+jobs:
+  seed-repository:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create milestones
+        if: ${{ inputs.create_milestones }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const milestones = [
+              { title: 'M0 - Foundation', description: 'Repository setup, development environment, and basic infrastructure', due_on: null },
+              { title: 'M1 - Core Platform', description: 'Basic application structure, authentication, and core services', due_on: null },
+              { title: 'M2 - User Management', description: 'User registration, profiles, and role-based access control', due_on: null },
+              { title: 'M3 - Booking System', description: 'Appointment scheduling, calendar integration, and availability management', due_on: null },
+              { title: 'M4 - Communications', description: 'Video calls, messaging, and notification systems', due_on: null },
+              { title: 'M5 - Compliance & Security', description: 'HIPAA compliance, security hardening, and audit logging', due_on: null },
+              { title: 'M6 - Analytics & Reporting', description: 'Dashboard, reporting, and analytics features', due_on: null },
+              { title: 'M7 - Advanced Features', description: 'Advanced integrations, mobile apps, and premium features', due_on: null }
+            ];
+
+            // Get existing milestones
+            const { data: existingMilestones } = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            });
+
+            for (const milestone of milestones) {
+              const exists = existingMilestones.find(m => m.title === milestone.title);
+              if (!exists) {
+                try {
+                  const created = await github.rest.issues.createMilestone({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    title: milestone.title,
+                    description: milestone.description,
+                    due_on: milestone.due_on
+                  });
+                  console.log(`Created milestone: ${milestone.title}`);
+                } catch (error) {
+                  console.log(`Failed to create milestone ${milestone.title}: ${error.message}`);
+                }
+              } else {
+                console.log(`Milestone already exists: ${milestone.title}`);
+              }
+            }
+
+      - name: Create GitHub Project
+        if: ${{ inputs.create_project }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              // Note: This requires admin permissions and Projects v2 API
+              const project = await github.graphql(`
+                mutation CreateProject($ownerId: ID!) {
+                  createProjectV2(input: {
+                    ownerId: $ownerId,
+                    title: "GroundedCounselling Development",
+                    shortDescription: "Main development project for tracking features, bugs, and milestones"
+                  }) {
+                    projectV2 {
+                      id
+                      title
+                      url
+                    }
+                  }
+                }
+              `, {
+                ownerId: context.repo.owner
+              });
+              console.log('Created project:', project.createProjectV2.projectV2.url);
+            } catch (error) {
+              console.log('Failed to create project (requires admin permissions):', error.message);
+            }
+
+      - name: Create initial issues
+        if: ${{ inputs.create_issues }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Read issues from seed file
+            const issuesPath = path.join(process.cwd(), '.github/seeds/issues.yml');
+            if (!fs.existsSync(issuesPath)) {
+              console.log('Issues seed file not found, skipping issue creation');
+              return;
+            }
+            
+            const yaml = require('js-yaml');
+            const issuesContent = fs.readFileSync(issuesPath, 'utf8');
+            const { issues } = yaml.load(issuesContent);
+            
+            // Get existing milestones for reference
+            const { data: milestones } = await github.rest.issues.listMilestones({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            
+            // Get existing issues to avoid duplicates
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all'
+            });
+            
+            for (const issue of issues) {
+              const exists = existingIssues.find(i => i.title === issue.title);
+              if (!exists) {
+                try {
+                  // Find milestone if specified
+                  let milestone = null;
+                  if (issue.milestone) {
+                    const foundMilestone = milestones.find(m => m.title.includes(issue.milestone));
+                    milestone = foundMilestone ? foundMilestone.number : null;
+                  }
+                  
+                  const created = await github.rest.issues.create({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    title: issue.title,
+                    body: issue.body,
+                    labels: issue.labels || [],
+                    milestone: milestone
+                  });
+                  console.log(`Created issue: ${issue.title}`);
+                } catch (error) {
+                  console.log(`Failed to create issue ${issue.title}: ${error.message}`);
+                }
+              } else {
+                console.log(`Issue already exists: ${issue.title}`);
+              }
+            }

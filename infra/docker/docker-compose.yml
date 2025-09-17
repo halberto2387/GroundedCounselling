@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: grounded-postgres
+    environment:
+      POSTGRES_DB: grounded_counselling
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d grounded_counselling"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - grounded-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: grounded-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - grounded-network
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/api.Dockerfile
+    container_name: grounded-api
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/grounded_counselling
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-production}
+    env_file:
+      - ../../services/api/.env.example
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - grounded-network
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/docker/worker.Dockerfile
+    container_name: grounded-worker
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/grounded_counselling
+    env_file:
+      - ../../services/worker/.env.example
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - grounded-network
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/docker/web.Dockerfile
+    container_name: grounded-web
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:${API_PORT:-8000}
+      - NEXT_PUBLIC_APP_URL=http://localhost:${WEB_PORT:-3000}
+    env_file:
+      - ../../apps/web/.env.example
+    depends_on:
+      - api
+    networks:
+      - grounded-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: grounded_postgres_data
+  redis_data:
+    name: grounded_redis_data
+  node_modules_cache:
+    name: grounded_node_modules_cache
+
+networks:
+  grounded-network:
+    name: grounded-network
+    driver: bridge

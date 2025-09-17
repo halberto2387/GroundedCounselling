@@ -1,0 +1,170 @@
+# Labels configuration for GroundedCounselling
+# This file defines all labels used in the repository
+# Managed by github-labeler action
+
+# Area labels - indicate which part of the system
+- name: "area/frontend"
+  color: "0052CC"
+  description: "Frontend/UI related"
+
+- name: "area/backend"
+  color: "8B4513"
+  description: "Backend/API related"
+
+- name: "area/infra"
+  color: "5319E7"
+  description: "Infrastructure, DevOps, Docker"
+
+- name: "area/docs"
+  color: "0075CA"
+  description: "Documentation related"
+
+- name: "area/security"
+  color: "D93F0B"
+  description: "Security related"
+
+- name: "area/compliance"
+  color: "B60205"
+  description: "Healthcare compliance (HIPAA, GDPR)"
+
+# Type labels - what kind of work
+- name: "type/feature"
+  color: "A2EEEF"
+  description: "New feature or enhancement"
+
+- name: "type/bug"
+  color: "D73A4A"
+  description: "Something isn't working"
+
+- name: "type/spike"
+  color: "7057FF"
+  description: "Research or investigation"
+
+- name: "type/chore"
+  color: "FEF2C0"
+  description: "Maintenance, refactoring, cleanup"
+
+- name: "type/hotfix"
+  color: "FF6B6B"
+  description: "Urgent fix for production"
+
+# Priority labels - how urgent
+- name: "priority/P0"
+  color: "B60205"
+  description: "Critical - Blocking/Security/Data Loss"
+
+- name: "priority/P1"
+  color: "D93F0B"
+  description: "High - Important for current milestone"
+
+- name: "priority/P2"
+  color: "FBCA04"
+  description: "Medium - Should be included if time permits"
+
+- name: "priority/P3"
+  color: "0E8A16"
+  description: "Low - Nice to have"
+
+# Status labels - workflow state
+- name: "status/triage"
+  color: "D4C5F9"
+  description: "Needs initial review and prioritization"
+
+- name: "status/backlog"
+  color: "EDEDED"
+  description: "Accepted and prioritized, ready for work"
+
+- name: "status/in-progress"
+  color: "FFEB3B"
+  description: "Currently being worked on"
+
+- name: "status/review"
+  color: "FF9800"
+  description: "Ready for review"
+
+- name: "status/blocked"
+  color: "E53E3E"
+  description: "Cannot proceed due to dependency"
+
+- name: "status/done"
+  color: "4CAF50"
+  description: "Work completed"
+
+# Size labels - effort estimation
+- name: "size/XS"
+  color: "C2E0C6"
+  description: "Extra Small - < 2 hours"
+
+- name: "size/S"
+  color: "7057FF"
+  description: "Small - < 1 day"
+
+- name: "size/M"
+  color: "FBCA04"
+  description: "Medium - 1-3 days"
+
+- name: "size/L"
+  color: "FF9800"
+  description: "Large - 3-5 days"
+
+- name: "size/XL"
+  color: "D73A4A"
+  description: "Extra Large - > 1 week"
+
+# Special labels
+- name: "good first issue"
+  color: "7057FF"
+  description: "Good for newcomers"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention is needed"
+
+- name: "duplicate"
+  color: "CFD3D7"
+  description: "This issue or pull request already exists"
+
+- name: "invalid"
+  color: "E4E669"
+  description: "This doesn't seem right"
+
+- name: "wontfix"
+  color: "FFFFFF"
+  description: "This will not be worked on"
+
+- name: "question"
+  color: "D876E3"
+  description: "Further information is requested"
+
+# Milestone-related labels
+- name: "milestone/M0"
+  color: "1D76DB"
+  description: "Foundation - M0"
+
+- name: "milestone/M1"
+  color: "1D76DB"
+  description: "Core Platform - M1"
+
+- name: "milestone/M2"
+  color: "1D76DB"
+  description: "User Management - M2"
+
+- name: "milestone/M3"
+  color: "1D76DB"
+  description: "Booking System - M3"
+
+- name: "milestone/M4"
+  color: "1D76DB"
+  description: "Communications - M4"
+
+- name: "milestone/M5"
+  color: "1D76DB"
+  description: "Compliance & Security - M5"
+
+- name: "milestone/M6"
+  color: "1D76DB"
+  description: "Analytics & Reporting - M6"
+
+- name: "milestone/M7"
+  color: "1D76DB"
+  description: "Advanced Features - M7"
