@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import type { paths } from './types';
+// import type { paths } from './types';
 
 export class GroundedCounsellingClient {
   private client: AxiosInstance;
