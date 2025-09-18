@@ -154,10 +154,7 @@ jobs:
                       specializations=['anxiety', 'depression'],
                       hourly_rate=150.0,
                       is_available=True,
-                      years_experience=5,
-                      education='PhD Psychology',
-                      certifications=['Licensed Therapist'],
-                      languages=['English', 'Spanish']
+                      years_experience=5
                   )
                   
                   specialist = await SpecialistService.create_specialist(

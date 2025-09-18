@@ -33,9 +33,7 @@ class SpecialistService:
             hourly_rate=specialist_data.hourly_rate,
             is_available=specialist_data.is_available,
             years_experience=specialist_data.years_experience,
-            education=specialist_data.education,
-            certifications=specialist_data.certifications,
-            languages=specialist_data.languages,
+            license_number=getattr(specialist_data, 'license_number', None),
         )
         
         db.add(specialist)
