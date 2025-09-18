@@ -32,7 +32,7 @@ class SpecialistService:
             specializations=specialist_data.specializations,
             hourly_rate=specialist_data.hourly_rate,
             is_available=specialist_data.is_available,
-            experience_years=specialist_data.experience_years,
+            years_experience=specialist_data.years_experience,
             education=specialist_data.education,
             certifications=specialist_data.certifications,
             languages=specialist_data.languages,
