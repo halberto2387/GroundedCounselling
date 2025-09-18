@@ -21,7 +21,8 @@ from .availability import (
     AvailabilityCreate,
     AvailabilityUpdate,
     AvailabilityOut,
-    AvailabilityBulkCreate,
+    BulkAvailabilityCreate,
+    AvailableSlot,
     WeeklySchedule,
 )
 
@@ -48,6 +49,7 @@ __all__ = [
     "AvailabilityCreate",
     "AvailabilityUpdate",
     "AvailabilityOut",
-    "AvailabilityBulkCreate",
+    "BulkAvailabilityCreate",
+    "AvailableSlot",
     "WeeklySchedule",
 ]
