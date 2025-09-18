@@ -13,6 +13,6 @@ concurrency:
 
 jobs:
   api-ci:
-    uses: ./.github/workflows/api-ci.yml
+    uses: halberto2387/GroundedCounselling/.github/workflows/api-ci.yml@main
   web-ci:
-    uses: ./.github/workflows/web-ci.yml
+    uses: halberto2387/GroundedCounselling/.github/workflows/web-ci.yml@main
