@@ -213,30 +213,11 @@ class BookingService:
         exclude_booking_id: Optional[UUID] = None,
     ) -> List[Booking]:
         """Check for conflicting bookings in the given time range."""
-        query = (
-            select(Booking)
-            .where(
-                and_(
-                    Booking.specialist_id == specialist_id,
-                    Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
-                    or_(
-                        # New booking starts during existing booking
-                        and_(
-                            Booking.start_time <= start_time,
-                            start_time < Booking.start_time + timedelta(minutes=Booking.duration_minutes)
-                        ),
-                        # New booking ends during existing booking
-                        and_(
-                            Booking.start_time < end_time,
-                            end_time <= Booking.start_time + timedelta(minutes=Booking.duration_minutes)
-                        ),
-                        # New booking encompasses existing booking
-                        and_(
-                            start_time <= Booking.start_time,
-                            Booking.start_time + timedelta(minutes=Booking.duration_minutes) <= end_time
-                        )
-                    )
-                )
+        # Get all active bookings for the specialist
+        query = select(Booking).where(
+            and_(
+                Booking.specialist_id == specialist_id,
+                Booking.status.in_([BookingStatus.PENDING, BookingStatus.CONFIRMED])
             )
         )
         
@@ -244,4 +225,15 @@ class BookingService:
             query = query.where(Booking.id != exclude_booking_id)
         
         result = await db.execute(query)
-        return result.scalars().all()
+        existing_bookings = result.scalars().all()
+        
+        # Check for conflicts in Python
+        conflicts = []
+        for booking in existing_bookings:
+            booking_end = booking.start_time + timedelta(minutes=booking.duration_minutes)
+            
+            # Check if bookings overlap
+            if (start_time < booking_end and end_time > booking.start_time):
+                conflicts.append(booking)
+                
+        return conflicts
