@@ -1,7 +1,7 @@
 """Add specialist booking session models
 
 Revision ID: 323c08db1e6f
-Revises: 0001_initial_user
+Revises: 0001_initial
 Create Date: 2025-09-18 23:35:40.372887
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '323c08db1e6f'
-down_revision = '0001_initial_user'
+down_revision = '0001_initial'
 branch_labels = None
 depends_on = None
 
