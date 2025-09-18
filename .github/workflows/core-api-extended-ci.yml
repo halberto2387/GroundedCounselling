@@ -60,7 +60,7 @@ jobs:
         run: |
           pip install uv
           uv pip install --system -r requirements.txt
-          uv pip install --system pytest pytest-asyncio httpx
+          uv pip install --system pytest pytest-asyncio httpx aiosqlite
         working-directory: services/api
 
       - name: Validate service imports
@@ -117,7 +117,7 @@ jobs:
         run: |
           pip install uv
           uv pip install --system -r requirements.txt
-          uv pip install --system pytest pytest-asyncio
+          uv pip install --system pytest pytest-asyncio aiosqlite
         working-directory: services/api
 
       - name: Setup test database
@@ -268,7 +268,7 @@ jobs:
         run: |
           pip install uv
           uv pip install --system -r requirements.txt
-          uv pip install --system pytest pytest-asyncio httpx
+          uv pip install --system pytest pytest-asyncio httpx aiosqlite
         working-directory: services/api
 
       - name: Setup test database
@@ -359,7 +359,7 @@ jobs:
         run: |
           pip install uv
           uv pip install --system -r requirements.txt
-          uv pip install --system pytest pytest-asyncio httpx
+          uv pip install --system pytest pytest-asyncio httpx aiosqlite
         working-directory: services/api
 
       - name: Run full integration test
