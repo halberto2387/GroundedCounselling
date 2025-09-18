@@ -55,22 +55,22 @@ jobs:
       - name: Run linting
         run: |
           # Run lint if script exists; otherwise skip without failing
-          pnpm -C apps/web run lint --if-present || echo "Lint skipped"
+          pnpm -C apps/web run --if-present lint || echo "Lint skipped"
 
       - name: Run type checking
         run: |
           # Run type-check if script exists; otherwise skip without failing
-          pnpm -C apps/web run type-check --if-present || echo "Type-check skipped"
+          pnpm -C apps/web run --if-present type-check || echo "Type-check skipped"
 
       - name: Run tests
         run: |
           # Run tests if script exists; otherwise skip without failing
-          pnpm -C apps/web run test --if-present -- --watchAll=false --coverage || echo "Tests skipped"
+          pnpm -C apps/web run --if-present test -- --watchAll=false --coverage || echo "Tests skipped"
 
       - name: Build Next.js application
         run: |
           # Build the web app; skip if no build script is defined
-          pnpm -C apps/web run build --if-present || echo "Build skipped"
+          pnpm -C apps/web run --if-present build || echo "Build skipped"
         env:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
           NEXT_PUBLIC_APP_URL: http://localhost:3000
