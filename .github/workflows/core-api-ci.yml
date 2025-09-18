@@ -141,10 +141,10 @@ jobs:
           python -c "
           from app.schemas import SpecialistCreate, BookingCreate, SessionCreate
           from datetime import datetime, time
+          import uuid
           
           # Test Specialist schema validation
           specialist_data = {
-              'user_id': 1,
               'bio': 'Experienced therapist',
               'specializations': ['anxiety', 'depression'],
               'hourly_rate': 150.00,
@@ -155,7 +155,7 @@ jobs:
           
           # Test Booking schema validation
           booking_data = {
-              'specialist_id': 1,
+              'specialist_id': uuid.uuid4(),
               'start_time': datetime.now(),
               'duration_minutes': 60,
               'notes': 'Initial consultation'
@@ -165,7 +165,7 @@ jobs:
           
           # Test Session schema validation
           session_data = {
-              'booking_id': 1,
+              'booking_id': uuid.uuid4(),
               'notes': 'Good progress made',
               'is_recorded': False
           }
@@ -182,11 +182,12 @@ jobs:
           from app.schemas import SpecialistOut, BookingOut, SessionOut
           from datetime import datetime
           import json
+          import uuid
           
           # Test Specialist output schema
           specialist_data = {
-              'id': 1,
-              'user_id': 1,
+              'id': uuid.uuid4(),
+              'user_id': uuid.uuid4(),
               'bio': 'Test bio',
               'specializations': ['therapy'],
               'hourly_rate': 100.0,
@@ -201,9 +202,9 @@ jobs:
           
           # Test Booking output schema
           booking_data = {
-              'id': 1,
-              'patient_id': 1,
-              'specialist_id': 1,
+              'id': uuid.uuid4(),
+              'patient_id': uuid.uuid4(),
+              'specialist_id': uuid.uuid4(),
               'start_time': datetime.now(),
               'duration_minutes': 60,
               'status': 'pending',
