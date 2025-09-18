@@ -1,0 +1,6 @@
+Alembic migrations for the API service.
+
+Commands (from services/api):
+- alembic revision --autogenerate -m "message"
+- alembic upgrade head
+- alembic downgrade -1

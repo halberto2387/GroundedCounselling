@@ -41,11 +41,12 @@ services:
     ports:
       - "${API_PORT:-8000}:8000"
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/grounded_counselling
-      - REDIS_URL=redis://redis:6379/0
-      - JWT_SECRET=${JWT_SECRET:-dev-secret-change-in-production}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-production}
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/grounded_counselling
+      ASYNC_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/grounded_counselling
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-production}
     env_file:
       - ../../services/api/.env.example
     depends_on:
@@ -79,6 +80,9 @@ services:
     build:
       context: ../..
       dockerfile: infra/docker/web.Dockerfile
+      args:
+        # Optionally override to a mirror, e.g. https://registry.npmmirror.com/
+        - NPM_REGISTRY=${NPM_REGISTRY:-https://registry.npmjs.org/}
     container_name: grounded-web
     ports:
       - "${WEB_PORT:-3000}:3000"

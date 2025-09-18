@@ -17,8 +17,8 @@ permissions:
 
 jobs:
   api-ci:
-    uses: ./.github/workflows/api-ci.yml
+    uses: ./.github/workflows/api-reusable.yml
     secrets: inherit
   web-ci:
-    uses: ./.github/workflows/web-ci.yml
+    uses: ./.github/workflows/web-reusable.yml
     secrets: inherit

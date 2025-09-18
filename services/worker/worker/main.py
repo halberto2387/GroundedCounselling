@@ -6,7 +6,7 @@ This is a placeholder implementation for Docker testing.
 import os
 import time
 import redis
-from rq import Worker, Queue, Connection
+from rq import Worker, Queue
 
 def main():
     """Main worker function"""
