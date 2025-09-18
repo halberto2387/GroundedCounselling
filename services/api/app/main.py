@@ -9,6 +9,10 @@ from sqlalchemy import text
 
 from app.db.session import get_session
 from app.routers import auth as auth_router
+from app.routers import specialists as specialists_router
+from app.routers import bookings as bookings_router
+from app.routers import sessions as sessions_router
+from app.routers import availability as availability_router
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
@@ -51,6 +55,10 @@ async def api_health(session: AsyncSession = Depends(get_session)):
     }
 
 app.include_router(auth_router.router)
+app.include_router(specialists_router.router, prefix="/api/v1")
+app.include_router(bookings_router.router, prefix="/api/v1")
+app.include_router(sessions_router.router, prefix="/api/v1")
+app.include_router(availability_router.router, prefix="/api/v1")
 
 if __name__ == "__main__":
     import uvicorn

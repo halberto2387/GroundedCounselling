@@ -1,0 +1,428 @@
+name: Core API Extended CI
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/models/**'
+      - 'services/api/app/schemas/**'
+      - 'services/api/app/routers/**'
+      - 'services/api/app/services/**'
+      - 'services/api/app/security/**'
+      - 'services/api/alembic/**'
+      - 'services/api/requirements.txt'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/models/**'
+      - 'services/api/app/schemas/**'
+      - 'services/api/app/routers/**'
+      - 'services/api/app/services/**'
+      - 'services/api/app/security/**'
+      - 'services/api/alembic/**'
+      - 'services/api/requirements.txt'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  validate-services:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-extended-core-api-${{ hashFiles('services/api/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-extended-core-api-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv pip install --system -r requirements.txt
+          uv pip install --system pytest pytest-asyncio httpx
+        working-directory: services/api
+
+      - name: Validate service imports
+        run: |
+          python -c "
+          from app.services.specialist import SpecialistService
+          from app.services.booking import BookingService
+          from app.services.session import SessionService
+          from app.services.availability import AvailabilityService
+          print('✓ All service classes imported successfully')
+          "
+        working-directory: services/api
+
+      - name: Validate router imports
+        run: |
+          python -c "
+          from app.routers.specialists import router as specialists_router
+          from app.routers.bookings import router as bookings_router
+          from app.routers.sessions import router as sessions_router
+          from app.routers.availability import router as availability_router
+          print('✓ All router modules imported successfully')
+          "
+        working-directory: services/api
+
+      - name: Validate auth security
+        run: |
+          python -c "
+          from app.security.auth import get_current_user, get_current_specialist
+          from app.security.auth import require_specialist_ownership, require_user_ownership
+          print('✓ All auth dependencies imported successfully')
+          "
+        working-directory: services/api
+
+      - name: Apply database migrations
+        run: |
+          alembic upgrade head
+          echo "✓ Database migrations applied successfully"
+        working-directory: services/api
+
+  test-crud-operations:
+    runs-on: ubuntu-latest
+    needs: validate-services
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv pip install --system -r requirements.txt
+          uv pip install --system pytest pytest-asyncio
+        working-directory: services/api
+
+      - name: Setup test database
+        run: |
+          alembic upgrade head
+          echo "✓ Test database prepared"
+        working-directory: services/api
+
+      - name: Test Specialist CRUD operations
+        run: |
+          python -c "
+          import asyncio
+          from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+          from sqlalchemy.orm import sessionmaker
+          from app.models.user import User
+          from app.models.specialist import Specialist
+          from app.services.specialist import SpecialistService
+          from app.schemas.specialist import SpecialistCreate, SpecialistUpdate
+          
+          async def test_specialist_crud():
+              engine = create_async_engine('sqlite+aiosqlite:///./test.db')
+              SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+              
+              async with SessionLocal() as session:
+                  # Create a test user first
+                  user = User(email='test@example.com', password_hash='hashed')
+                  session.add(user)
+                  await session.commit()
+                  await session.refresh(user)
+                  
+                  # Test create specialist
+                  specialist_data = SpecialistCreate(
+                      bio='Test specialist',
+                      specializations=['anxiety', 'depression'],
+                      hourly_rate=150.0,
+                      is_available=True,
+                      experience_years=5,
+                      education='PhD Psychology',
+                      certifications=['Licensed Therapist'],
+                      languages=['English', 'Spanish']
+                  )
+                  
+                  specialist = await SpecialistService.create_specialist(
+                      session, specialist_data, user.id
+                  )
+                  assert specialist.bio == 'Test specialist'
+                  assert specialist.hourly_rate == 150.0
+                  
+                  # Test get specialist
+                  found_specialist = await SpecialistService.get_specialist(session, specialist.id)
+                  assert found_specialist is not None
+                  assert found_specialist.bio == 'Test specialist'
+                  
+                  # Test update specialist
+                  update_data = SpecialistUpdate(bio='Updated bio', hourly_rate=175.0)
+                  updated_specialist = await SpecialistService.update_specialist(
+                      session, specialist.id, update_data
+                  )
+                  assert updated_specialist.bio == 'Updated bio'
+                  assert updated_specialist.hourly_rate == 175.0
+                  
+                  print('✓ Specialist CRUD operations passed')
+          
+          asyncio.run(test_specialist_crud())
+          "
+        working-directory: services/api
+
+      - name: Test Booking CRUD operations
+        run: |
+          python -c "
+          import asyncio
+          from datetime import datetime, timedelta
+          from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+          from sqlalchemy.orm import sessionmaker
+          from app.models.user import User
+          from app.models.specialist import Specialist
+          from app.models.booking import Booking, BookingStatus
+          from app.services.booking import BookingService
+          from app.schemas.booking import BookingCreate, BookingUpdate
+          
+          async def test_booking_crud():
+              engine = create_async_engine('sqlite+aiosqlite:///./test.db')
+              SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+              
+              async with SessionLocal() as session:
+                  # Create test users and specialist
+                  patient = User(email='patient@example.com', password_hash='hashed')
+                  specialist_user = User(email='specialist@example.com', password_hash='hashed')
+                  session.add_all([patient, specialist_user])
+                  await session.commit()
+                  await session.refresh(patient)
+                  await session.refresh(specialist_user)
+                  
+                  specialist = Specialist(
+                      user_id=specialist_user.id,
+                      bio='Test specialist',
+                      specializations=['therapy'],
+                      hourly_rate=100.0,
+                      is_available=True
+                  )
+                  session.add(specialist)
+                  await session.commit()
+                  await session.refresh(specialist)
+                  
+                  # Test create booking
+                  booking_data = BookingCreate(
+                      specialist_id=specialist.id,
+                      start_time=datetime.now() + timedelta(days=1),
+                      duration_minutes=60,
+                      notes='Test booking'
+                  )
+                  
+                  booking = await BookingService.create_booking(
+                      session, booking_data, patient.id
+                  )
+                  assert booking.duration_minutes == 60
+                  assert booking.status == BookingStatus.PENDING
+                  
+                  # Test get booking
+                  found_booking = await BookingService.get_booking(session, booking.id)
+                  assert found_booking is not None
+                  assert found_booking.notes == 'Test booking'
+                  
+                  # Test confirm booking
+                  confirmed_booking = await BookingService.confirm_booking(session, booking.id)
+                  assert confirmed_booking.status == BookingStatus.CONFIRMED
+                  
+                  print('✓ Booking CRUD operations passed')
+          
+          asyncio.run(test_booking_crud())
+          "
+        working-directory: services/api
+
+  test-api-endpoints:
+    runs-on: ubuntu-latest
+    needs: test-crud-operations
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv pip install --system -r requirements.txt
+          uv pip install --system pytest pytest-asyncio httpx
+        working-directory: services/api
+
+      - name: Setup test database
+        run: |
+          alembic upgrade head
+          echo "✓ Test database prepared"
+        working-directory: services/api
+
+      - name: Test API endpoint imports and structure
+        run: |
+          python -c "
+          from fastapi.testclient import TestClient
+          from app.main import app
+          
+          client = TestClient(app)
+          
+          # Test app startup
+          response = client.get('/health')
+          assert response.status_code == 200
+          
+          # Test OpenAPI docs generation
+          response = client.get('/docs')
+          assert response.status_code == 200
+          
+          # Test that routers are included
+          openapi_schema = client.get('/openapi.json').json()
+          paths = openapi_schema.get('paths', {})
+          
+          # Check if our new endpoints are present
+          specialist_paths = [path for path in paths.keys() if '/specialists' in path]
+          booking_paths = [path for path in paths.keys() if '/bookings' in path]
+          session_paths = [path for path in paths.keys() if '/sessions' in path]
+          availability_paths = [path for path in paths.keys() if '/availability' in path]
+          
+          assert len(specialist_paths) > 0, 'Specialist endpoints not found'
+          assert len(booking_paths) > 0, 'Booking endpoints not found'
+          assert len(session_paths) > 0, 'Session endpoints not found'
+          assert len(availability_paths) > 0, 'Availability endpoints not found'
+          
+          print('✓ API endpoints structure validated')
+          print(f'  - Found {len(specialist_paths)} specialist endpoints')
+          print(f'  - Found {len(booking_paths)} booking endpoints')
+          print(f'  - Found {len(session_paths)} session endpoints')
+          print(f'  - Found {len(availability_paths)} availability endpoints')
+          "
+        working-directory: services/api
+
+      - name: Test authentication middleware
+        run: |
+          python -c "
+          from fastapi.testclient import TestClient
+          from app.main import app
+          
+          client = TestClient(app)
+          
+          # Test that protected endpoints require authentication
+          protected_endpoints = [
+              '/api/v1/specialists',
+              '/api/v1/specialists/me',
+              '/api/v1/bookings/my-bookings',
+              '/api/v1/sessions/my-sessions',
+              '/api/v1/availability/me'
+          ]
+          
+          for endpoint in protected_endpoints:
+              response = client.get(endpoint)
+              # Should get 401 or 422 (validation error for missing header)
+              assert response.status_code in [401, 422], f'Endpoint {endpoint} not properly protected'
+          
+          print('✓ Authentication middleware tests passed')
+          "
+        working-directory: services/api
+
+  integration-test:
+    runs-on: ubuntu-latest
+    needs: [validate-services, test-crud-operations, test-api-endpoints]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv pip install --system -r requirements.txt
+          uv pip install --system pytest pytest-asyncio httpx
+        working-directory: services/api
+
+      - name: Run full integration test
+        run: |
+          # Apply migrations
+          alembic upgrade head
+          
+          # Test complete workflow
+          python -c "
+          import asyncio
+          from datetime import datetime, timedelta, time
+          from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+          from sqlalchemy.orm import sessionmaker
+          from fastapi.testclient import TestClient
+          from app.main import app
+          from app.models.user import User
+          from app.models.specialist import Specialist
+          from app.models.availability import Availability, DayOfWeek
+          
+          async def test_full_workflow():
+              engine = create_async_engine('sqlite+aiosqlite:///./test.db')
+              SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+              
+              async with SessionLocal() as session:
+                  # Create users
+                  patient = User(email='patient@workflow.com', password_hash='hashed')
+                  specialist_user = User(email='specialist@workflow.com', password_hash='hashed')
+                  session.add_all([patient, specialist_user])
+                  await session.commit()
+                  await session.refresh(patient)
+                  await session.refresh(specialist_user)
+                  
+                  # Create specialist profile
+                  specialist = Specialist(
+                      user_id=specialist_user.id,
+                      bio='Integration test specialist',
+                      specializations=['integration', 'testing'],
+                      hourly_rate=125.0,
+                      is_available=True,
+                      experience_years=3
+                  )
+                  session.add(specialist)
+                  await session.commit()
+                  await session.refresh(specialist)
+                  
+                  # Create availability
+                  availability = Availability(
+                      specialist_id=specialist.id,
+                      day_of_week=DayOfWeek.MONDAY,
+                      start_time=time(9, 0),
+                      end_time=time(17, 0),
+                      is_available=True
+                  )
+                  session.add(availability)
+                  await session.commit()
+                  
+                  print('✓ Full integration test workflow completed')
+                  print(f'  - Created patient: {patient.email}')
+                  print(f'  - Created specialist: {specialist.bio}')
+                  print(f'  - Created availability: {availability.day_of_week} {availability.start_time}-{availability.end_time}')
+          
+          asyncio.run(test_full_workflow())
+          
+          echo '✓ Extended Core API CI completed successfully'
+          "
+        working-directory: services/api
