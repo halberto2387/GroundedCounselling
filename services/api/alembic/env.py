@@ -1,10 +1,10 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from sqlalchemy import Connection
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
 from pathlib import Path
+
+from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Ensure project root is on sys.path so imports like `from app...` work
 ROOT_DIR = Path(__file__).resolve().parents[1]
