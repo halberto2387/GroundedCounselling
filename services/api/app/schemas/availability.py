@@ -1,7 +1,6 @@
 from datetime import datetime, time
 from typing import List
 from pydantic import BaseModel, Field, ConfigDict
-from uuid import UUID
 from app.models.availability import DayOfWeek
 
 
@@ -24,8 +23,8 @@ class AvailabilityUpdate(BaseModel):
 
 
 class AvailabilityOut(AvailabilityBase):
-    id: UUID
-    specialist_id: UUID
+    id: int
+    specialist_id: int
     created_at: datetime
     updated_at: datetime
     
@@ -46,7 +45,7 @@ class AvailableSlot(BaseModel):
 
 class WeeklySchedule(BaseModel):
     """Weekly schedule for a specialist"""
-    specialist_id: UUID
+    specialist_id: int
     monday: List[AvailabilityOut] = Field(default_factory=list)
     tuesday: List[AvailabilityOut] = Field(default_factory=list)
     wednesday: List[AvailabilityOut] = Field(default_factory=list)

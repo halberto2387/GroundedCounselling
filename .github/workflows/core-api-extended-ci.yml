@@ -154,7 +154,7 @@ jobs:
                       specializations=['anxiety', 'depression'],
                       hourly_rate=150.0,
                       is_available=True,
-                      experience_years=5,
+                      years_experience=5,
                       education='PhD Psychology',
                       certifications=['Licensed Therapist'],
                       languages=['English', 'Spanish']
@@ -399,7 +399,7 @@ jobs:
                       specializations=['integration', 'testing'],
                       hourly_rate=125.0,
                       is_available=True,
-                      experience_years=3
+                      years_experience=3
                   )
                   session.add(specialist)
                   await session.commit()

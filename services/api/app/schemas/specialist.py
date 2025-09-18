@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, ConfigDict
-from uuid import UUID
 
 
 class SpecialistBase(BaseModel):
@@ -9,7 +8,7 @@ class SpecialistBase(BaseModel):
     specializations: List[str] = Field(default_factory=list)
     hourly_rate: Optional[float] = Field(None, ge=0, description="Hourly rate in USD")
     is_available: bool = True
-    experience_years: Optional[int] = Field(None, ge=0)
+    years_experience: Optional[int] = Field(None, ge=0)
     education: Optional[str] = None
     certifications: List[str] = Field(default_factory=list)
     languages: List[str] = Field(default_factory=list)
@@ -24,15 +23,16 @@ class SpecialistUpdate(BaseModel):
     specializations: Optional[List[str]] = None
     hourly_rate: Optional[float] = Field(None, ge=0)
     is_available: Optional[bool] = None
-    experience_years: Optional[int] = Field(None, ge=0)
+    years_experience: Optional[int] = Field(None, ge=0)
     education: Optional[str] = None
     certifications: Optional[List[str]] = None
     languages: Optional[List[str]] = None
 
 
 class SpecialistOut(SpecialistBase):
-    id: UUID
-    user_id: UUID
+    id: int
+    user_id: int
+    license_number: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     
