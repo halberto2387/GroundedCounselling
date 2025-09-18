@@ -11,8 +11,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   api-ci:
     uses: halberto2387/GroundedCounselling/.github/workflows/api-ci.yml@main
+    secrets: inherit
   web-ci:
     uses: halberto2387/GroundedCounselling/.github/workflows/web-ci.yml@main
+    secrets: inherit

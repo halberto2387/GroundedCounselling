@@ -64,51 +64,50 @@ jobs:
       - name: Install UV and dependencies
         run: |
           pip install uv
-          cd services/api
           uv pip install --system -r requirements.txt
           # Install dev dependencies if they exist
           if [ -f requirements-dev.txt ]; then
             uv pip install --system -r requirements-dev.txt
           fi
+        working-directory: services/api
 
       - name: Run linting with ruff
         run: |
-          cd services/api
           # Install ruff if not in requirements
           uv pip install --system ruff || true
           ruff check . --output-format=github || true
+        working-directory: services/api
 
       - name: Run formatting check with black
         run: |
-          cd services/api
           # Install black if not in requirements
           uv pip install --system black || true
           black --check . || true
+        working-directory: services/api
 
       - name: Run type checking with mypy
         run: |
-          cd services/api
           # Install mypy if not in requirements
           uv pip install --system mypy || true
           mypy . || true
+        working-directory: services/api
 
       - name: Set up test environment
         run: |
-          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > services/api/.env.test
-          echo "REDIS_URL=redis://localhost:6379/0" >> services/api/.env.test
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > .env.test
+          echo "REDIS_URL=redis://localhost:6379/0" >> .env.test
+        working-directory: services/api
 
       - name: Run migrations
         run: |
-          cd services/api
           uv pip install --system alembic || true
-          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db
-          alembic upgrade head
+          alembic -c alembic.ini upgrade head
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        working-directory: services/api
 
       - name: Run tests with pytest
         run: |
-          cd services/api
           # Install pytest if not in requirements
           uv pip install --system pytest pytest-asyncio pytest-cov || true
           # Run tests if they exist
@@ -120,6 +119,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
           REDIS_URL: redis://localhost:6379/0
+        working-directory: services/api
 
   docker-build:
     runs-on: ubuntu-latest
