@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field, ConfigDict
+from uuid import UUID
 
 
 class SpecialistBase(BaseModel):
@@ -8,12 +9,14 @@ class SpecialistBase(BaseModel):
     specializations: List[str] = Field(default_factory=list)
     hourly_rate: Optional[float] = Field(None, ge=0, description="Hourly rate in USD")
     is_available: bool = True
-    license_number: Optional[str] = None
-    years_experience: Optional[int] = Field(None, ge=0)
+    experience_years: Optional[int] = Field(None, ge=0)
+    education: Optional[str] = None
+    certifications: List[str] = Field(default_factory=list)
+    languages: List[str] = Field(default_factory=list)
 
 
 class SpecialistCreate(SpecialistBase):
-    user_id: int
+    pass  # user_id is passed separately to the service method
 
 
 class SpecialistUpdate(BaseModel):
@@ -21,13 +24,15 @@ class SpecialistUpdate(BaseModel):
     specializations: Optional[List[str]] = None
     hourly_rate: Optional[float] = Field(None, ge=0)
     is_available: Optional[bool] = None
-    license_number: Optional[str] = None
-    years_experience: Optional[int] = Field(None, ge=0)
+    experience_years: Optional[int] = Field(None, ge=0)
+    education: Optional[str] = None
+    certifications: Optional[List[str]] = None
+    languages: Optional[List[str]] = None
 
 
 class SpecialistOut(SpecialistBase):
-    id: int
-    user_id: int
+    id: UUID
+    user_id: UUID
     created_at: datetime
     updated_at: datetime
     
