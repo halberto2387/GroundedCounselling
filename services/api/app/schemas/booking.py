@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 from pydantic import BaseModel, Field, ConfigDict
 from app.models.booking import BookingStatus
 
@@ -11,7 +12,7 @@ class BookingBase(BaseModel):
 
 
 class BookingCreate(BookingBase):
-    specialist_id: int
+    specialist_id: UUID
 
 
 class BookingUpdate(BaseModel):
@@ -23,9 +24,9 @@ class BookingUpdate(BaseModel):
 
 
 class BookingOut(BookingBase):
-    id: int
-    patient_id: int
-    specialist_id: int
+    id: UUID
+    patient_id: UUID
+    specialist_id: UUID
     status: BookingStatus
     cancellation_reason: Optional[str] = None
     created_at: datetime
