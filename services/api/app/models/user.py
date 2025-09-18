@@ -1,8 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.specialist import Specialist
+    from app.models.booking import Booking
 
 
 class User(Base):
@@ -15,3 +20,7 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    
+    # Relationships
+    specialist: Mapped[Optional["Specialist"]] = relationship("Specialist", back_populates="user", uselist=False)
+    patient_bookings: Mapped[list["Booking"]] = relationship("Booking", back_populates="patient", foreign_keys="Booking.patient_id")
