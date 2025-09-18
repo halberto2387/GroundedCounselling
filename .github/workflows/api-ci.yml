@@ -1,18 +1,12 @@
 name: API CI
 
 on:
+  workflow_dispatch: {}
+  workflow_call: {}
   push:
     branches: [main, develop, 'feature/**', 'hotfix/**']
-    paths:
-      - 'services/api/**'
-      - 'infra/docker/api.Dockerfile'
-      - '.github/workflows/api-ci.yml'
   pull_request:
     branches: [main, develop]
-    paths:
-      - 'services/api/**'
-      - 'infra/docker/api.Dockerfile'
-      - '.github/workflows/api-ci.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -102,6 +96,15 @@ jobs:
         run: |
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" > services/api/.env.test
           echo "REDIS_URL=redis://localhost:6379/0" >> services/api/.env.test
+
+      - name: Run migrations
+        run: |
+          cd services/api
+          uv pip install --system alembic || true
+          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db
+          alembic upgrade head
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
       - name: Run tests with pytest
         run: |

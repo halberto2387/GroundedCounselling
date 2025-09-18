@@ -1,0 +1,18 @@
+name: CI (All)
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-ci:
+    uses: ./.github/workflows/api-ci.yml
+  web-ci:
+    uses: ./.github/workflows/web-ci.yml

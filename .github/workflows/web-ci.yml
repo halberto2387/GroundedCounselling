@@ -1,24 +1,12 @@
 name: Web CI
 
 on:
+  workflow_dispatch: {}
+  workflow_call: {}
   push:
     branches: [main, develop, 'feature/**', 'hotfix/**']
-    paths:
-      - 'apps/web/**'
-      - 'packages/**'
-      - 'infra/docker/web.Dockerfile'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/web-ci.yml'
   pull_request:
     branches: [main, develop]
-    paths:
-      - 'apps/web/**'
-      - 'packages/**'
-      - 'infra/docker/web.Dockerfile'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/web-ci.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
