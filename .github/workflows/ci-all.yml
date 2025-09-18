@@ -16,8 +16,8 @@ permissions:
 
 jobs:
   api-ci:
-    uses: halberto2387/GroundedCounselling/.github/workflows/api-ci.yml@main
+    uses: ./.github/workflows/api-ci.yml
     secrets: inherit
   web-ci:
-    uses: halberto2387/GroundedCounselling/.github/workflows/web-ci.yml@main
+    uses: ./.github/workflows/web-ci.yml
     secrets: inherit
