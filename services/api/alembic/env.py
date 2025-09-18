@@ -11,8 +11,9 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from app.db.base import Base
-from app.models import *  # noqa: F401,F403
+# Import app modules after path setup  # noqa: E402
+from app.db.base import Base  # noqa: E402
+from app.models import *  # noqa: F401,F403,E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
