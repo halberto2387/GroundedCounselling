@@ -271,12 +271,18 @@ jobs:
         working-directory: services/api
 
       - name: Setup test database
+        env:
+          DATABASE_URL: "sqlite:///./test.db"
+          ASYNC_DATABASE_URL: "sqlite+aiosqlite:///./test.db"
         run: |
           alembic upgrade head
           echo "✓ Test database prepared"
         working-directory: services/api
 
       - name: Test API endpoint imports and structure
+        env:
+          DATABASE_URL: "sqlite:///./test.db"
+          ASYNC_DATABASE_URL: "sqlite+aiosqlite:///./test.db"
         run: |
           python -c "
           from fastapi.testclient import TestClient
@@ -316,6 +322,9 @@ jobs:
         working-directory: services/api
 
       - name: Test authentication middleware
+        env:
+          DATABASE_URL: "sqlite:///./test.db"
+          ASYNC_DATABASE_URL: "sqlite+aiosqlite:///./test.db"
         run: |
           python -c "
           from fastapi.testclient import TestClient
