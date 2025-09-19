@@ -315,3 +315,18 @@ The `specialists.specializations` JSON array column is being deprecated in favor
 During the transition both representations are written for backward compatibility. Reads now prefer the association tables when present, falling back to JSON otherwise. Tests in the Specialist Filter Matrix CI ensure exact matching (no substring collisions like `art` vs `heart`).
 
 Planned removal of the legacy JSON field will occur after confirming 1:1 parity in production. If you add new code that filters by specializations, use service-layer methods instead of ad-hoc JSON queries to remain forward-compatible.
+
+### Parity Verification
+
+Before dropping or ignoring the legacy JSON field, run the parity check script in production or staging:
+
+```bash
+cd services/api
+python -m scripts.check_specialization_parity --database-url "$DATABASE_URL"
+```
+
+Exit codes:
+- 0: All specialists have identical counts (safe to proceed)
+- 1: At least one mismatch (investigate before removing JSON field)
+
+You can adjust sampling with `--sample 50` to view more mismatch examples.
