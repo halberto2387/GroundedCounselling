@@ -4,11 +4,14 @@ from pydantic import Field
 
 def _derive_async_url(db_url: str) -> str:
     # If already async, return as-is
-    if db_url.startswith("postgresql+asyncpg://"):
+    if db_url.startswith("postgresql+asyncpg://") or db_url.startswith("sqlite+aiosqlite://"):
         return db_url
     # Convert common sync form to asyncpg driver for SQLAlchemy async engine
     if db_url.startswith("postgresql://"):
         return db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # Convert SQLite to async version
+    if db_url.startswith("sqlite://"):
+        return db_url.replace("sqlite://", "sqlite+aiosqlite://", 1)
     return db_url
 
 
@@ -16,7 +19,7 @@ class Settings(BaseSettings):
     app_name: str = "GroundedCounselling API"
     # Sync URL for Alembic; Async URL for application use
     database_url_sync: str = Field(
-        default="postgresql://postgres:postgres@localhost:5432/grounded_counselling",
+        default="sqlite:///./test.db",
         alias="DATABASE_URL",
     )
     async_database_url: str | None = Field(default=None, alias="ASYNC_DATABASE_URL")
