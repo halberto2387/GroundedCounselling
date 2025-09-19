@@ -18,12 +18,12 @@ async def test_sync_specializations_create_and_update():
 
     SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with SessionLocal() as session:
-        # Create specialist
-        spec = Specialist(user_id=1, bio='Test', specializations=['anxiety'], is_available=True)
+        # Create specialist (no JSON specializations column anymore)
+        spec = Specialist(user_id=1, bio='Test', is_available=True)
         session.add(spec)
         await session.flush()
 
-        # Initial sync
+        # Initial sync via association table
         await SpecialistService._sync_specializations(session, spec, ['Anxiety', 'Depression'])
         await session.commit()
 

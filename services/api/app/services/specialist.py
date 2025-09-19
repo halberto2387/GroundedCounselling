@@ -4,7 +4,7 @@ Specialist service for CRUD operations.
 
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select, and_, or_, text, func, insert, delete
+from sqlalchemy import select, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -31,7 +31,6 @@ class SpecialistService:
         specialist = Specialist(
             user_id=user_id,
             bio=specialist_data.bio,
-            specializations=specialist_data.specializations,  # legacy mirror
             hourly_rate=specialist_data.hourly_rate,
             is_available=specialist_data.is_available,
             years_experience=specialist_data.years_experience,
@@ -41,6 +40,8 @@ class SpecialistService:
         await db.flush()
         # Associate specializations via normalized slugs
         await SpecialistService._sync_specializations(db, specialist, specialist_data.specializations)
+        # Populate cache for property access
+        await SpecialistService._load_specialization_slugs(db, [specialist])
         await db.commit()
         await db.refresh(specialist)
         return specialist
@@ -53,7 +54,10 @@ class SpecialistService:
             .options(selectinload(Specialist.user))
             .where(Specialist.id == specialist_id)
         )
-        return result.scalar_one_or_none()
+        specialist = result.scalar_one_or_none()
+        if specialist:
+            await SpecialistService._load_specialization_slugs(db, [specialist])
+        return specialist
 
     @staticmethod
     async def get_specialist_by_user_id(db: AsyncSession, user_id: UUID) -> Optional[Specialist]:
@@ -63,7 +67,10 @@ class SpecialistService:
             .options(selectinload(Specialist.user))
             .where(Specialist.user_id == user_id)
         )
-        return result.scalar_one_or_none()
+        specialist = result.scalar_one_or_none()
+        if specialist:
+            await SpecialistService._load_specialization_slugs(db, [specialist])
+        return specialist
 
     @staticmethod
     async def get_specialists(
@@ -81,7 +88,6 @@ class SpecialistService:
             conditions.append(Specialist.is_available == is_available)
         
         if specializations:
-            # Prefer association join if tables exist
             assoc_exists = await SpecialistService._association_tables_present(db)
             if assoc_exists:
                 norm_specs = bulk_normalize(specializations)
@@ -93,26 +99,17 @@ class SpecialistService:
                     Specialization.id == SpecialistSpecialization.specialization_id,
                 ).where(Specialization.slug.in_(norm_specs))
             else:
-                # Fallback to existing JSON-based strategy
-                dialect_name = getattr(db.bind.dialect, 'name', '') if db.bind else ''
-                if dialect_name == 'postgresql':
-                    conditions.append(Specialist.specializations.op('&&')(specializations))
-                else:
-                    like_clauses = []
-                    for spec in specializations:
-                        lowered_column = func.lower(Specialist.specializations.cast(text('TEXT')))
-                        pattern = f'%"{spec.lower()}"%'
-                        like_clauses.append(lowered_column.like(pattern))
-                    if like_clauses:
-                        conditions.append(or_(*like_clauses))
+                # Association tables not yet present (pre-migration state); skip specialization filter to avoid errors
+                pass
         
         if conditions:
             query = query.where(and_(*conditions))
         
         query = query.offset(skip).limit(limit).order_by(Specialist.created_at.desc())
-        
         result = await db.execute(query)
-        return result.scalars().all()
+        specialists = result.scalars().all()
+        await SpecialistService._load_specialization_slugs(db, specialists)
+        return specialists
 
     @staticmethod
     async def update_specialist(
@@ -130,8 +127,7 @@ class SpecialistService:
         # Sync associations if specializations provided
         if 'specializations' in update_data:
             await SpecialistService._sync_specializations(db, specialist, update_data['specializations'])
-            # Mirror legacy JSON field
-            specialist.specializations = update_data['specializations']
+            await SpecialistService._load_specialization_slugs(db, [specialist])
 
         await db.commit()
         await db.refresh(specialist)
@@ -202,3 +198,25 @@ class SpecialistService:
                     SpecialistSpecialization.specialization_id.in_(remove_ids)
                 )
             )
+        # Update cache for the passed specialist (single object convenience)
+        setattr(specialist, '_specialization_slugs_cache', norm_specs)
+    
+    @staticmethod
+    async def _load_specialization_slugs(db: AsyncSession, specialists: List[Specialist]):
+        """Populate each specialist object's cached specialization slug list.
+
+        This avoids needing a formal relationship until the model layer is expanded.
+        """
+        if not specialists:
+            return
+        ids = [s.id for s in specialists]
+        rows = await db.execute(
+            select(SpecialistSpecialization.specialist_id, Specialization.slug)
+            .join(Specialization, Specialization.id == SpecialistSpecialization.specialization_id)
+            .where(SpecialistSpecialization.specialist_id.in_(ids))
+        )
+        mapping: dict[int, List[str]] = {}
+        for sid, slug in rows.all():  # type: ignore
+            mapping.setdefault(sid, []).append(slug)
+        for s in specialists:
+            setattr(s, '_specialization_slugs_cache', mapping.get(s.id, []))

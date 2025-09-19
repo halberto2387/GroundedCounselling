@@ -33,9 +33,12 @@ async def test_specialist_filtering_sqlite_case_insensitive():
         await session.commit()
         await session.refresh(u1); await session.refresh(u2)
 
-        s1 = Specialist(user_id=u1.id, bio='Bio 1', specializations=['Anxiety', 'Trauma'], hourly_rate=100.0, is_available=True)
-        s2 = Specialist(user_id=u2.id, bio='Bio 2', specializations=['depression'], hourly_rate=120.0, is_available=True)
+        s1 = Specialist(user_id=u1.id, bio='Bio 1', hourly_rate=100.0, is_available=True)
+        s2 = Specialist(user_id=u2.id, bio='Bio 2', hourly_rate=120.0, is_available=True)
         session.add_all([s1, s2])
+        await session.flush()
+        await SpecialistService._sync_specializations(session, s1, ['Anxiety', 'Trauma'])
+        await SpecialistService._sync_specializations(session, s2, ['depression'])
         await session.commit()
 
         results = await SpecialistService.get_specialists(session, specializations=['anxiety'])
@@ -61,9 +64,12 @@ async def test_specialist_filtering_no_substring_collision_sqlite():
         session.add_all([u1, u2])
         await session.commit(); await session.refresh(u1); await session.refresh(u2)
 
-        s1 = Specialist(user_id=u1.id, bio='Art therapist', specializations=['art'], hourly_rate=80.0, is_available=True)
-        s2 = Specialist(user_id=u2.id, bio='Heart wellness', specializations=['heart'], hourly_rate=90.0, is_available=True)
+        s1 = Specialist(user_id=u1.id, bio='Art therapist', hourly_rate=80.0, is_available=True)
+        s2 = Specialist(user_id=u2.id, bio='Heart wellness', hourly_rate=90.0, is_available=True)
         session.add_all([s1, s2])
+        await session.flush()
+        await SpecialistService._sync_specializations(session, s1, ['art'])
+        await SpecialistService._sync_specializations(session, s2, ['heart'])
         await session.commit()
 
         r1 = await SpecialistService.get_specialists(session, specializations=['art'])
@@ -89,9 +95,12 @@ async def test_specialist_filtering_postgres_overlap():
         await session.commit()
         await session.refresh(u1); await session.refresh(u2)
 
-        s1 = Specialist(user_id=u1.id, bio='PG Bio 1', specializations=['anxiety', 'stress'], hourly_rate=90.0, is_available=True)
-        s2 = Specialist(user_id=u2.id, bio='PG Bio 2', specializations=['depression'], hourly_rate=110.0, is_available=True)
+        s1 = Specialist(user_id=u1.id, bio='PG Bio 1', hourly_rate=90.0, is_available=True)
+        s2 = Specialist(user_id=u2.id, bio='PG Bio 2', hourly_rate=110.0, is_available=True)
         session.add_all([s1, s2])
+        await session.flush()
+        await SpecialistService._sync_specializations(session, s1, ['anxiety', 'stress'])
+        await SpecialistService._sync_specializations(session, s2, ['depression'])
         await session.commit()
 
         results = await SpecialistService.get_specialists(session, specializations=['stress'])
