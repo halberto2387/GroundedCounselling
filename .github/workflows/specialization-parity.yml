@@ -120,6 +120,26 @@ jobs:
           git commit -m "chore(metrics): update parity history $ts" || echo "No changes to commit"
           git push origin parity-history || echo "(non-fatal) Unable to push history"
 
+      - name: Sparkline (mismatches)
+        if: always()
+        run: |
+          # Attempt to fetch latest history for sparkline
+          git fetch origin parity-history || true
+          if git show-ref --verify --quiet refs/remotes/origin/parity-history; then
+            git checkout --quiet parity-history
+            HISTORY_PATH=metrics/parity/history.jsonl
+            if [ -f "$HISTORY_PATH" ]; then
+              SPARK=$(python services/api/scripts/generate_parity_sparkline.py "$HISTORY_PATH" || echo "(sparkline error)")
+              echo "Sparkline: $SPARK" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Sparkline: (no history file)" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "Sparkline: (history branch missing)" >> $GITHUB_STEP_SUMMARY
+          fi
+          # Return to original commit (detached) so subsequent steps aren't on history branch
+          git checkout -
+
       - name: Append trend link to summary
         if: always()
         run: |
