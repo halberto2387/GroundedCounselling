@@ -4,7 +4,7 @@ Specialist service for CRUD operations.
 
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, or_, text, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -77,10 +77,25 @@ class SpecialistService:
             conditions.append(Specialist.is_available == is_available)
         
         if specializations:
-            # Check if any of the provided specializations match
-            conditions.append(
-                Specialist.specializations.op('&&')(specializations)
-            )
+            # Portable filtering for list/JSON stored specializations.
+            # Strategy:
+            # 1. Try Postgres ARRAY overlap operator if available (dialect name check at runtime).
+            # 2. Fallback: OR group of LIKE matches on JSON/text representation for SQLite and others.
+            dialect_name = getattr(db.bind.dialect, 'name', '') if db.bind else ''
+            if dialect_name == 'postgresql':
+                # Use native overlap for efficiency
+                conditions.append(Specialist.specializations.op('&&')(specializations))
+            else:
+                like_clauses = []
+                # JSON/text serialization of list typically like: ["anxiety", "stress"]
+                # We wrap with quotes to reduce false positives (e.g., "art" in "heart").
+                for spec in specializations:
+                    # Case-insensitive search by lowering both sides
+                    lowered_column = func.lower(Specialist.specializations.cast(text('TEXT')))
+                    pattern = f'%"{spec.lower()}"%'
+                    like_clauses.append(lowered_column.like(pattern))
+                if like_clauses:
+                    conditions.append(or_(*like_clauses))
         
         if conditions:
             query = query.where(and_(*conditions))
