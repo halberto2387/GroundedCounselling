@@ -1,0 +1,154 @@
+name: Specialization Parity Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'Override DATABASE_URL (optional)'
+        required: false
+        type: string
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 03:00 UTC
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # allow pushing history branch
+    env:
+      # Base database URL injected later; maintain placeholder to avoid secret reference lint issues.
+      BASE_DATABASE_URL: ''
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: services/api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Resolve database URL
+        id: resolve-db
+        run: |
+          db_input='${{ github.event.inputs.database_url }}'
+          if [ -n "$db_input" ]; then
+            echo "db_url=$db_input" >> $GITHUB_OUTPUT
+          else
+            echo "db_url=$DATABASE_URL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run migrations (ensure schema up to date)
+        working-directory: services/api
+        run: |
+          alembic upgrade head
+        env:
+          DATABASE_URL: ${{ steps.resolve-db.outputs.db_url }}
+
+      - name: Run parity check
+        working-directory: services/api
+        run: |
+          python -m scripts.check_specialization_parity --database-url "${{ steps.resolve-db.outputs.db_url }}" --output parity_report.json
+
+      - name: Upload parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-report
+          path: services/api/parity_report.json
+          retention-days: 14
+
+      - name: Generate trend summary
+        if: always()
+        run: |
+          echo "### Specialization Parity Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Run ID: $GITHUB_RUN_ID" >> $GITHUB_STEP_SUMMARY
+          if [ -f services/api/parity_report.json ]; then
+            TOTAL=$(jq '.total_specialists' services/api/parity_report.json)
+            MISMATCH=$(jq '.mismatch_total' services/api/parity_report.json)
+            PARITY=$(jq '.parity' services/api/parity_report.json)
+            echo "Total specialists: $TOTAL" >> $GITHUB_STEP_SUMMARY
+            echo "Mismatches: $MISMATCH" >> $GITHUB_STEP_SUMMARY
+            if [ "$PARITY" = "true" ]; then
+              echo "Status: ✅ Parity" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Status: ❌ Mismatches detected" >> $GITHUB_STEP_SUMMARY
+              echo "#### Examples" >> $GITHUB_STEP_SUMMARY
+              jq -r '.examples[] | "- Specialist \(.specialist_id): JSON=\(.json_count) vs Assoc=\(.association_count)"' services/api/parity_report.json | head -n 10 >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "Report file missing" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Persist history (append)
+        if: always()
+        run: |
+          if [ ! -f services/api/parity_report.json ]; then
+            echo "No report to persist"; exit 0; fi
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          # Fetch or create history branch
+          git fetch origin parity-history || true
+          if git show-ref --verify --quiet refs/remotes/origin/parity-history; then
+            git checkout parity-history
+            git merge --ff-only origin/parity-history || true
+          else
+            git checkout --orphan parity-history
+            git reset --mixed
+          fi
+          mkdir -p metrics/parity
+          ts=$(date -u +%Y%m%dT%H%M%SZ)
+            # Keep a rolling JSONL file
+          echo "$(jq -c . services/api/parity_report.json)" >> metrics/parity/history.jsonl
+          # Trim to last 200 lines
+          tail -n 200 metrics/parity/history.jsonl > metrics/parity/.tmp && mv metrics/parity/.tmp metrics/parity/history.jsonl
+          # Build markdown trend (last 30 entries)
+          tail -n 30 metrics/parity/history.jsonl | jq -r '"| " + (.timestamp // "n/a") + " | " + ( ( .parity | tostring) ) + " | " + ( (.mismatch_total|tostring) ) + " | " + (.total_specialists|tostring) + " |"' > metrics/parity/table_rows.md
+          {
+            echo "# Specialization Parity Trend";
+            echo;
+            echo "| Timestamp (UTC) | Parity | Mismatches | Total |";
+            echo "|-----------------|--------|------------|-------|";
+            cat metrics/parity/table_rows.md;
+          } > metrics/parity/README.md
+          git add metrics/parity/history.jsonl metrics/parity/README.md
+          git commit -m "chore(metrics): update parity history $ts" || echo "No changes to commit"
+          git push origin parity-history || echo "(non-fatal) Unable to push history"
+
+      - name: Append trend link to summary
+        if: always()
+        run: |
+          echo "\nHistory branch: parity-history (metrics/parity/README.md)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify Slack (failure with retry)
+        if: failure()
+        run: |
+          SLACK_WEBHOOK_URL="$SLACK_WEBHOOK_URL"
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "Slack webhook not configured; skipping."; exit 0; fi
+          payload_base=$(jq -n --arg repo "$GITHUB_REPOSITORY" --arg run "$GITHUB_RUN_ID" --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" '{text: "❌ Parity check FAILED for "+$repo+" (run #"+$run+"). Details: "+$url }')
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'Content-type: application/json' --data "$payload_base" "$SLACK_WEBHOOK_URL")
+            if [ "$code" = "200" ]; then echo "Slack notify success"; exit 0; fi
+            echo "Slack attempt $attempt failed (HTTP $code)"; sleep $((attempt*5));
+          done
+          echo "Slack notification failed after retries" >&2
+
+      - name: Notify Teams (failure with retry)
+        if: failure()
+        run: |
+          TEAMS_WEBHOOK_URL="$TEAMS_WEBHOOK_URL"
+          if [ -z "$TEAMS_WEBHOOK_URL" ]; then
+            echo "Teams webhook not configured; skipping."; exit 0; fi
+          payload=$(jq -n --arg repo "$GITHUB_REPOSITORY" --arg run "$GITHUB_RUN_ID" --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" '{text: "❌ Parity check FAILED for "+$repo+" (run #"+$run+"). Details: "+$url }')
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d "$payload" "$TEAMS_WEBHOOK_URL")
+            if [ "$code" = "200" ] || [ "$code" = "204" ]; then echo "Teams notify success"; exit 0; fi
+            echo "Teams attempt $attempt failed (HTTP $code)"; sleep $((attempt*5));
+          done
+          echo "Teams notification failed after retries" >&2

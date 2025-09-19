@@ -233,6 +233,7 @@ Thumbs.db
 # Redis dump
 dump.rdb
 
-# Alembic
-services/api/alembic/versions/*.py
-!services/api/alembic/versions/0001_initial.py
+# Alembic (track migrations)
+# Previously only first migration was tracked; now include all
+!services/api/alembic/versions/
+!services/api/alembic/versions/*.py

@@ -174,6 +174,35 @@ pnpm generate:sdk
 └── .github/                    # GitHub workflows and templates
 ```
 
+## ✅ Continuous Integration
+
+The repository uses a layered CI approach to balance fast feedback with deeper validation:
+
+- **Core API Lite CI** (`core-api-lite-ci.yml`): Runs on every push/PR touching API code. Uses an in-repo SQLite database to perform:
+	- Dependency installation + Alembic migrations
+	- Health endpoint + OpenAPI schema sanity checks
+	- Minimal async DB CRUD smoke test (user insert)
+	This provides a quick signal (<1 min typical) without relying on Postgres services.
+
+- **Core API Extended CI** (`core-api-extended-ci.yml`): More comprehensive multi-job pipeline validating CRUD flows, service imports, and integration scenarios. Currently under stabilization; some steps may still assume Postgres-specific behavior.
+
+- **API CI / Web CI**: Existing pipelines for broader API & web build/test validation.
+
+- **SDK Sync** (`sdk-sync.yml`): Regenerates the TypeScript SDK from the live FastAPI OpenAPI schema (using in-process TestClient + SQLite) and fails if `packages/sdk/src/types.ts` drifts from the committed version. Ensures client consumers always have an up-to-date contract.
+
+- **Specialist Filter Matrix** (`specialist-filter-matrix.yml`): Runs specialization filtering tests across SQLite and Postgres to guarantee dialect parity and guard against substring collision regressions.
+
+### CI Roadmap
+Planned improvements:
+- Make all service queries dialect-portable (replace Postgres-only operators)
+- Reintroduce richer CRUD and integration checks into Extended CI once portable
+- Add auth/security endpoint smoke tests to Lite CI
+- Consider Python and OS matrix when stability is confirmed
+- Optional auto-commit for SDK regeneration (behind `AUTO_COMMIT_SDK` flag)
+- Transition fully to normalized specialization association tables once backfill validated; remove legacy JSON list
+
+If a PR only needs rapid confirmation that the API layer still starts and migrates, rely on the Lite workflow; for deeper assurance, consult the Extended run once stabilized.
+
 ## 🎨 Design System
 
 The design system uses the following brand colors:
@@ -275,3 +304,60 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ---
 
 Built with ❤️ for mental health professionals and their clients.
+
+## ⚠️ Specializations Data Model Transition
+
+The `specialists.specializations` JSON array column is being deprecated in favor of a normalized model:
+
+- `specializations` (unique `slug`, `display_name`)
+- `specialist_specializations` (association table)
+
+During the transition both representations are written for backward compatibility. Reads now prefer the association tables when present, falling back to JSON otherwise. Tests in the Specialist Filter Matrix CI ensure exact matching (no substring collisions like `art` vs `heart`).
+
+Planned removal of the legacy JSON field will occur after confirming 1:1 parity in production. If you add new code that filters by specializations, use service-layer methods instead of ad-hoc JSON queries to remain forward-compatible.
+
+### Parity Verification
+
+Before dropping or ignoring the legacy JSON field, run the parity check script in production or staging:
+
+```bash
+cd services/api
+python -m scripts.check_specialization_parity --database-url "$DATABASE_URL"
+```
+
+Exit codes:
+- 0: All specialists have identical counts (safe to proceed)
+- 1: At least one mismatch (investigate before removing JSON field)
+
+You can adjust sampling with `--sample 50` to view more mismatch examples.
+
+### Automated Parity Workflow
+
+A scheduled + manual GitHub Actions workflow (`specialization-parity.yml`) runs the parity script daily at 03:00 UTC and can be triggered on demand.
+
+Configure repository secret:
+- `DATABASE_URL` (points at the target environment—staging or prod readonly replica).
+
+Manual run (GitHub UI → Actions → Specialization Parity Check → Run workflow) optionally allows overriding the database URL.
+
+Failure of this workflow (non‑zero exit) signals remaining mismatches between legacy JSON counts and association rows; delay JSON field removal until green for several consecutive days.
+
+#### Notifications & Trend
+
+The workflow produces:
+- `parity_report.json` artifact (retained 14 days) containing counts & sample mismatches.
+- A GitHub job summary with the latest totals.
+
+Optional webhook notifications (Slack / Teams) can be enabled by adding secrets:
+- `SLACK_WEBHOOK_URL`
+- `TEAMS_WEBHOOK_URL`
+
+Placeholders are present; once secrets are added you can extend the workflow to actually POST payloads (currently simplified for linting environments).
+
+#### Planned JSON Field Removal
+
+A placeholder migration (`0006_drop_specialist_json_field_placeholder`) is included but guarded by a runtime error to prevent accidental execution. After stable parity (e.g., 7 consecutive green daily runs):
+1. Edit the migration to remove the guard and call `op.drop_column('specialists', 'specializations')`.
+2. Re-run migrations in staging; confirm application behavior.
+3. Apply to production during a low-traffic window.
+4. Remove legacy references in code (mirroring writes) and update documentation.
