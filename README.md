@@ -341,3 +341,23 @@ Configure repository secret:
 Manual run (GitHub UI → Actions → Specialization Parity Check → Run workflow) optionally allows overriding the database URL.
 
 Failure of this workflow (non‑zero exit) signals remaining mismatches between legacy JSON counts and association rows; delay JSON field removal until green for several consecutive days.
+
+#### Notifications & Trend
+
+The workflow produces:
+- `parity_report.json` artifact (retained 14 days) containing counts & sample mismatches.
+- A GitHub job summary with the latest totals.
+
+Optional webhook notifications (Slack / Teams) can be enabled by adding secrets:
+- `SLACK_WEBHOOK_URL`
+- `TEAMS_WEBHOOK_URL`
+
+Placeholders are present; once secrets are added you can extend the workflow to actually POST payloads (currently simplified for linting environments).
+
+#### Planned JSON Field Removal
+
+A placeholder migration (`0006_drop_specialist_json_field_placeholder`) is included but guarded by a runtime error to prevent accidental execution. After stable parity (e.g., 7 consecutive green daily runs):
+1. Edit the migration to remove the guard and call `op.drop_column('specialists', 'specializations')`.
+2. Re-run migrations in staging; confirm application behavior.
+3. Apply to production during a low-traffic window.
+4. Remove legacy references in code (mirroring writes) and update documentation.

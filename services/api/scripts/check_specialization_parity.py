@@ -15,7 +15,9 @@ from __future__ import annotations
 import os
 import argparse
 import asyncio
-from typing import List, Tuple
+from typing import List, Tuple, Dict, Any
+import json
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select, func
@@ -58,6 +60,7 @@ async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--database-url', dest='db_url', default=None)
     parser.add_argument('--sample', type=int, default=10)
+    parser.add_argument('--output', type=str, default='parity_report.json', help='Path to write JSON report')
     args = parser.parse_args()
 
     db_url = args.db_url or os.getenv('DATABASE_URL') or DEFAULT_DB
@@ -68,14 +71,34 @@ async def main():
     SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     async with SessionLocal() as session:
         total, mismatch_count, examples = await gather_parity(session, sample=args.sample)
+    report: Dict[str, Any] = {
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'total_specialists': total,
+        'mismatch_total': mismatch_count,
+        'examples': [
+            {
+                'specialist_id': sid,
+                'json_count': json_len,
+                'association_count': assoc_len,
+            }
+            for sid, json_len, assoc_len in examples
+        ],
+        'parity': mismatch_count == 0,
+        'sample_limit': args.sample,
+    }
+    with open(args.output, 'w', encoding='utf-8') as f:
+        json.dump(report, f, indent=2)
+
     print(f"Total specialists: {total}")
     if mismatch_count == 0:
         print("All specialists have parity between JSON and association rows ✅")
+        print(f"Report: {args.output}")
         exit(0)
     else:
         print(f"Mismatched specialists: {mismatch_count}")
-        for sid, json_len, assoc_len in examples:
-            print(f"  Specialist {sid}: JSON={json_len} vs Assoc={assoc_len}")
+        for ex in report['examples']:
+            print(f"  Specialist {ex['specialist_id']}: JSON={ex['json_count']} vs Assoc={ex['association_count']}")
+        print(f"Report: {args.output}")
         exit(1)
 
 if __name__ == '__main__':
