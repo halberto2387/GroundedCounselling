@@ -1,0 +1,128 @@
+name: SDK Sync
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/**'
+      - 'services/api/openapi.json'
+      - 'packages/sdk/**'
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/api/app/**'
+      - 'services/api/openapi.json'
+      - 'packages/sdk/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regenerate-and-compare:
+    name: Regenerate SDK and Compare
+    runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: '20.x'
+      PYTHON_VERSION: '3.11'
+      DATABASE_URL: 'sqlite:///./test.db'
+      ASYNC_DATABASE_URL: 'sqlite+aiosqlite:///./test.db'
+      AUTO_COMMIT_SDK: 'false'
+      DRIFT: '0'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install API dependencies (uv)
+        working-directory: services/api
+        run: |
+          pip install uv
+          uv pip install --system -r requirements.txt
+
+      - name: Export live OpenAPI schema
+        working-directory: services/api
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          ASYNC_DATABASE_URL: ${{ env.ASYNC_DATABASE_URL }}
+        run: |
+          python -c "from fastapi.testclient import TestClient; from app.main import app; import json, pathlib; c=TestClient(app); s=c.get('/openapi.json').json(); p=pathlib.Path('openapi.generated.json'); p.write_text(json.dumps(s, indent=2)); print(f'✓ Wrote generated schema to {p}')"
+
+      - name: Copy schema into SDK package
+        run: |
+          if [ -f services/api/openapi.generated.json ]; then cp services/api/openapi.generated.json packages/sdk/openapi.json; else cp services/api/openapi.json packages/sdk/openapi.json; fi
+          echo "✓ OpenAPI schema prepared for SDK generation"
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Regenerate SDK types
+        working-directory: packages/sdk
+        run: pnpm run generate
+
+      - name: Detect changes
+        run: |
+          if git diff --name-only --exit-code packages/sdk/src/types.ts > /dev/null; then
+            echo '✅ SDK types are up to date.'
+          else
+            echo '❗ SDK types out of date. See diff below:'
+            git --no-pager diff packages/sdk/src/types.ts || true
+            echo '::warning title=SDK Drift Detected::Regenerated SDK differs from committed version.'
+            echo 'DRIFT=1' >> $GITHUB_ENV
+          fi
+
+      - name: Auto-commit regenerated types (optional)
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK == 'true' }}
+        run: |
+          echo 'AUTO_COMMIT_SDK enabled — committing regenerated types.'
+          git config user.name 'sdk-bot'
+          git config user.email 'sdk-bot@users.noreply.github.com'
+          git add packages/sdk/src/types.ts
+          git commit -m 'chore(sdk): auto-commit regenerated types [skip ci]' || echo 'Nothing to commit'
+          git push || echo 'Push failed (likely no permissions on PR from fork)'
+
+      - name: Note auto-commit disabled
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK != 'true' }}
+        run: echo 'AUTO_COMMIT_SDK not enabled; failing workflow instead of committing.'
+
+      - name: Upload regenerated types artifact
+        if: ${{ env.DRIFT == '1' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-sdk-types
+          path: packages/sdk/src/types.ts
+          if-no-files-found: ignore
+
+      - name: Fail if drift detected (no auto-commit)
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK != 'true' }}
+        run: |
+          echo 'SDK drift detected. Run: pnpm --filter @grounded-counselling/sdk run generate and commit updated types.'
+          exit 1
+
+      - name: Success after auto-commit
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK == 'true' }}
+        run: echo 'Drift resolved via auto-commit ✅'
+
+      - name: Success summary
+        if: ${{ env.DRIFT != '1' }}
+        run: echo "SDK Sync passed with no drift ✅"

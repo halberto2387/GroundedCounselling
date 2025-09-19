@@ -174,6 +174,32 @@ pnpm generate:sdk
 └── .github/                    # GitHub workflows and templates
 ```
 
+## ✅ Continuous Integration
+
+The repository uses a layered CI approach to balance fast feedback with deeper validation:
+
+- **Core API Lite CI** (`core-api-lite-ci.yml`): Runs on every push/PR touching API code. Uses an in-repo SQLite database to perform:
+	- Dependency installation + Alembic migrations
+	- Health endpoint + OpenAPI schema sanity checks
+	- Minimal async DB CRUD smoke test (user insert)
+	This provides a quick signal (<1 min typical) without relying on Postgres services.
+
+- **Core API Extended CI** (`core-api-extended-ci.yml`): More comprehensive multi-job pipeline validating CRUD flows, service imports, and integration scenarios. Currently under stabilization; some steps may still assume Postgres-specific behavior.
+
+- **API CI / Web CI**: Existing pipelines for broader API & web build/test validation.
+
+- **SDK Sync** (`sdk-sync.yml`): Regenerates the TypeScript SDK from the live FastAPI OpenAPI schema (using in-process TestClient + SQLite) and fails if `packages/sdk/src/types.ts` drifts from the committed version. Ensures client consumers always have an up-to-date contract.
+
+### CI Roadmap
+Planned improvements:
+- Make all service queries dialect-portable (replace Postgres-only operators)
+- Reintroduce richer CRUD and integration checks into Extended CI once portable
+- Add auth/security endpoint smoke tests to Lite CI
+- Consider Python and OS matrix when stability is confirmed
+- Optional auto-commit for SDK regeneration (behind `AUTO_COMMIT_SDK` flag)
+
+If a PR only needs rapid confirmation that the API layer still starts and migrates, rely on the Lite workflow; for deeper assurance, consult the Extended run once stabilized.
+
 ## 🎨 Design System
 
 The design system uses the following brand colors:
