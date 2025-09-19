@@ -1,0 +1,45 @@
+name: Specialization Parity Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'Override DATABASE_URL (optional)'
+        required: false
+        type: string
+  schedule:
+    - cron: '0 3 * * *'  # Daily at 03:00 UTC
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: services/api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run migrations (ensure schema up to date)
+        working-directory: services/api
+        env:
+          DATABASE_URL: ${{ github.event.inputs.database_url || secrets.DATABASE_URL }}
+        run: |
+          alembic upgrade head
+
+      - name: Run parity check
+        working-directory: services/api
+        env:
+          DATABASE_URL: ${{ github.event.inputs.database_url || secrets.DATABASE_URL }}
+        run: |
+          python -m scripts.check_specialization_parity --database-url "$DATABASE_URL"

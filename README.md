@@ -330,3 +330,14 @@ Exit codes:
 - 1: At least one mismatch (investigate before removing JSON field)
 
 You can adjust sampling with `--sample 50` to view more mismatch examples.
+
+### Automated Parity Workflow
+
+A scheduled + manual GitHub Actions workflow (`specialization-parity.yml`) runs the parity script daily at 03:00 UTC and can be triggered on demand.
+
+Configure repository secret:
+- `DATABASE_URL` (points at the target environment—staging or prod readonly replica).
+
+Manual run (GitHub UI → Actions → Specialization Parity Check → Run workflow) optionally allows overriding the database URL.
+
+Failure of this workflow (non‑zero exit) signals remaining mismatches between legacy JSON counts and association rows; delay JSON field removal until green for several consecutive days.
