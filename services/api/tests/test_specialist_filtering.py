@@ -47,6 +47,31 @@ async def test_specialist_filtering_sqlite_case_insensitive():
         assert results_multi[0].id == s1.id
 
 @pytest.mark.asyncio
+async def test_specialist_filtering_no_substring_collision_sqlite():
+    """'art' must not match 'heart' when using normalization logic (association fallback)."""
+    engine = create_async_engine(SQLITE_URL)
+    async with engine.begin() as conn:
+        from app.models import base
+        await conn.run_sync(base.Base.metadata.create_all)
+
+    SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with SessionLocal() as session:
+        u1 = User(email='art@example.com', password_hash='x')
+        u2 = User(email='heart@example.com', password_hash='x')
+        session.add_all([u1, u2])
+        await session.commit(); await session.refresh(u1); await session.refresh(u2)
+
+        s1 = Specialist(user_id=u1.id, bio='Art therapist', specializations=['art'], hourly_rate=80.0, is_available=True)
+        s2 = Specialist(user_id=u2.id, bio='Heart wellness', specializations=['heart'], hourly_rate=90.0, is_available=True)
+        session.add_all([s1, s2])
+        await session.commit()
+
+        r1 = await SpecialistService.get_specialists(session, specializations=['art'])
+        assert len(r1) == 1 and r1[0].id == s1.id
+        r2 = await SpecialistService.get_specialists(session, specializations=['heart'])
+        assert len(r2) == 1 and r2[0].id == s2.id
+
+@pytest.mark.asyncio
 @pytest.mark.skipif(not POSTGRES_TEST_URL, reason="TEST_POSTGRES_URL not provided")
 async def test_specialist_filtering_postgres_overlap():
     """Ensure Postgres overlap operator still functions when available."""

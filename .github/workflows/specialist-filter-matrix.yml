@@ -1,0 +1,72 @@
+name: Specialist Filter Matrix CI
+
+on:
+  push:
+    paths:
+      - 'services/api/**'
+      - '.github/workflows/specialist-filter-matrix.yml'
+      - 'services/api/pyproject.toml'
+      - 'services/api/requirements.txt'
+  pull_request:
+    paths:
+      - 'services/api/**'
+      - '.github/workflows/specialist-filter-matrix.yml'
+
+jobs:
+  test-filtering:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, postgres]
+    env:
+      PYTHONUNBUFFERED: '1'
+      PIP_DISABLE_PIP_VERSION_CHECK: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: services/api
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start Postgres (if selected)
+        if: matrix.db == 'postgres'
+        uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '15'
+          postgresql db: 'testdb'
+          postgresql user: 'test'
+          postgresql password: 'test'
+
+      - name: Set DB URL env
+        id: set-db
+        run: |
+          if [ "${{ matrix.db }}" = "postgres" ]; then
+            echo "TEST_POSTGRES_URL=postgresql+asyncpg://test:test@localhost:5432/testdb" >> $GITHUB_ENV
+          fi
+
+      - name: Run migrations (sqlite only)  # Postgres path uses same alembic but different URL if provided
+        working-directory: services/api
+        run: |
+          if [ "${{ matrix.db }}" = "sqlite" ]; then
+            alembic upgrade head
+          else
+            DATABASE_URL=postgresql+asyncpg://test:test@localhost:5432/testdb alembic upgrade head
+          fi
+
+      - name: Run specialist filtering tests
+        working-directory: services/api
+        run: |
+          if [ "${{ matrix.db }}" = "sqlite" ]; then
+            pytest -q tests/test_specialist_filtering.py
+          else
+            TEST_POSTGRES_URL=postgresql+asyncpg://test:test@localhost:5432/testdb pytest -q tests/test_specialist_filtering.py
+          fi

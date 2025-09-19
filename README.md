@@ -190,6 +190,8 @@ The repository uses a layered CI approach to balance fast feedback with deeper v
 
 - **SDK Sync** (`sdk-sync.yml`): Regenerates the TypeScript SDK from the live FastAPI OpenAPI schema (using in-process TestClient + SQLite) and fails if `packages/sdk/src/types.ts` drifts from the committed version. Ensures client consumers always have an up-to-date contract.
 
+- **Specialist Filter Matrix** (`specialist-filter-matrix.yml`): Runs specialization filtering tests across SQLite and Postgres to guarantee dialect parity and guard against substring collision regressions.
+
 ### CI Roadmap
 Planned improvements:
 - Make all service queries dialect-portable (replace Postgres-only operators)
@@ -197,6 +199,7 @@ Planned improvements:
 - Add auth/security endpoint smoke tests to Lite CI
 - Consider Python and OS matrix when stability is confirmed
 - Optional auto-commit for SDK regeneration (behind `AUTO_COMMIT_SDK` flag)
+- Transition fully to normalized specialization association tables once backfill validated; remove legacy JSON list
 
 If a PR only needs rapid confirmation that the API layer still starts and migrates, rely on the Lite workflow; for deeper assurance, consult the Extended run once stabilized.
 
@@ -301,3 +304,14 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ---
 
 Built with ❤️ for mental health professionals and their clients.
+
+## ⚠️ Specializations Data Model Transition
+
+The `specialists.specializations` JSON array column is being deprecated in favor of a normalized model:
+
+- `specializations` (unique `slug`, `display_name`)
+- `specialist_specializations` (association table)
+
+During the transition both representations are written for backward compatibility. Reads now prefer the association tables when present, falling back to JSON otherwise. Tests in the Specialist Filter Matrix CI ensure exact matching (no substring collisions like `art` vs `heart`).
+
+Planned removal of the legacy JSON field will occur after confirming 1:1 parity in production. If you add new code that filters by specializations, use service-layer methods instead of ad-hoc JSON queries to remain forward-compatible.
