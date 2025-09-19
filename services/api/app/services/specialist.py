@@ -4,7 +4,7 @@ Specialist service for CRUD operations.
 
 from typing import List, Optional
 from uuid import UUID
-from sqlalchemy import select, and_, or_, text
+from sqlalchemy import select, and_, or_, text, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -90,8 +90,10 @@ class SpecialistService:
                 # JSON/text serialization of list typically like: ["anxiety", "stress"]
                 # We wrap with quotes to reduce false positives (e.g., "art" in "heart").
                 for spec in specializations:
-                    pattern = f'%"{spec}"%'
-                    like_clauses.append(Specialist.specializations.cast(text('TEXT')).like(pattern))
+                    # Case-insensitive search by lowering both sides
+                    lowered_column = func.lower(Specialist.specializations.cast(text('TEXT')))
+                    pattern = f'%"{spec.lower()}"%'
+                    like_clauses.append(lowered_column.like(pattern))
                 if like_clauses:
                     conditions.append(or_(*like_clauses))
         
