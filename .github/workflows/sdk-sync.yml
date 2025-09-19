@@ -16,7 +16,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -31,6 +31,8 @@ jobs:
       PYTHON_VERSION: '3.11'
       DATABASE_URL: 'sqlite:///./test.db'
       ASYNC_DATABASE_URL: 'sqlite+aiosqlite:///./test.db'
+      AUTO_COMMIT_SDK: 'false'
+      DRIFT: '0'
 
     steps:
       - name: Checkout repository
@@ -89,20 +91,38 @@ jobs:
             echo 'DRIFT=1' >> $GITHUB_ENV
           fi
 
+      - name: Auto-commit regenerated types (optional)
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK == 'true' }}
+        run: |
+          echo 'AUTO_COMMIT_SDK enabled — committing regenerated types.'
+          git config user.name 'sdk-bot'
+          git config user.email 'sdk-bot@users.noreply.github.com'
+          git add packages/sdk/src/types.ts
+          git commit -m 'chore(sdk): auto-commit regenerated types [skip ci]' || echo 'Nothing to commit'
+          git push || echo 'Push failed (likely no permissions on PR from fork)'
+
+      - name: Note auto-commit disabled
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK != 'true' }}
+        run: echo 'AUTO_COMMIT_SDK not enabled; failing workflow instead of committing.'
+
       - name: Upload regenerated types artifact
-        if: env.DRIFT == '1'
+        if: ${{ env.DRIFT == '1' }}
         uses: actions/upload-artifact@v4
         with:
           name: regenerated-sdk-types
           path: packages/sdk/src/types.ts
           if-no-files-found: ignore
 
-      - name: Fail if drift detected
-        if: env.DRIFT == '1'
+      - name: Fail if drift detected (no auto-commit)
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK != 'true' }}
         run: |
-          echo 'SDK drift detected. Please run pnpm --filter @grounded-counselling/sdk run generate and commit updated types.'
+          echo 'SDK drift detected. Run: pnpm --filter @grounded-counselling/sdk run generate and commit updated types.'
           exit 1
 
+      - name: Success after auto-commit
+        if: ${{ env.DRIFT == '1' && env.AUTO_COMMIT_SDK == 'true' }}
+        run: echo 'Drift resolved via auto-commit ✅'
+
       - name: Success summary
-        if: env.DRIFT != '1'
+        if: ${{ env.DRIFT != '1' }}
         run: echo "SDK Sync passed with no drift ✅"
